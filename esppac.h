@@ -1,6 +1,6 @@
 #include "esphome.h"
 
-static const char* PANASONIC_AC_VERSION = "0.9.3";
+static const char* PANASONIC_AC_VERSION = "0.9.4";
 static const char* TAG = "esppac";
 
 static const byte HEADER = 0x5A; // The header of the protocol, every packet starts with this
@@ -53,6 +53,9 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
 
       this->vertical_swing_sensor->add_on_state_callback([this](std::string value)
       {
+        if(this->state != ready)
+          return;
+
         if(value != this->vertical_swing_state) // Ignore if already the correct state
         {
           ESP_LOGD(TAG, "Setting vertical swing position");
@@ -79,6 +82,9 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
 
       this->horizontal_swing_sensor->add_on_state_callback([this](std::string value)
       {
+        if(this->state != ready)
+          return;
+
         if(value != this->horizontal_swing_state) // Ignore if already the correct state
         {
           ESP_LOGD(TAG, "Setting horizontal swing position");
@@ -105,6 +111,9 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
 
       this->nanoex_switch->add_on_state_callback([this](bool value)
       {
+        if(this->state != ready)
+          return;
+
         if(value != this->nanoex_state) // Ignore if already the correct state
         {
           if(value)
@@ -125,6 +134,9 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
 
     void control(const ClimateCall &call) override
     {
+      if(this->state != ready)
+        return;
+
       ESP_LOGV(TAG, "AC control request");
 
       if(call.get_mode().has_value())
@@ -160,6 +172,9 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
             ESP_LOGV(TAG, "Unsupported mode requested");
           break;
         }
+
+        this->mode = *call.get_mode(); // Set mode manually since we won't receive a report from the AC if its the same mode again
+        this->publish_state(); // Send this state, will get updated once next poll is executed
       }
 
       if(call.get_target_temperature().has_value())
@@ -284,17 +299,16 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
       initTime = millis();
       lastPacketSent = millis();
 
-      init(); // Block setup until initialization is done
+      this->fan_mode = CLIMATE_FAN_OFF;
+      this->swing_mode = CLIMATE_SWING_OFF;
+      this->publish_state(); // Post dummy state so Home Assistant doesn't disconnect
     }
 
-
-    void init()
+    void loop() override
     {
-      do
+      if(state != ready)
       {
         handle_init_packets(); // Handle initialization packets separate from normal packets
-
-        loop();
 
         if(millis() - initTime > INIT_FAIL_TIMEOUT)
         {
@@ -303,11 +317,7 @@ class PanasonicACComponent : public Component, public UARTDevice, public Climate
           return;
         }
       }
-      while (state != ready);
-    }
 
-    void loop() override
-    {
       if(millis() - lastRead > READ_TIMEOUT && receiveBufferIndex != 0) // Check if our read timed out and we received something
       {
         log_packet(receiveBuffer, receiveBufferIndex);
