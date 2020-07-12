@@ -3,8 +3,7 @@ esphome:
   platform: ESP32
   board: nodemcu-32s
   includes:
-    - esppac_commands.h
-    - esppac.h
+    - ./esphome-panasonic-ac
 
 wifi:
   networks:
@@ -14,6 +13,7 @@ wifi:
 
 logger:
   level: DEBUG
+#  baud_rate: 0 # ESP8266 only
 
 api:
   password: "1234"
@@ -77,7 +77,7 @@ switch:
 climate:
   - platform: custom
     lambda: |-
-      auto ac = new PanasonicACComponent(id(ac_uart));
+      auto ac = new PanasonicAC(id(ac_uart));
 
       ac->set_outside_temperature_sensor(id(ac01_outside_temperature));
       ac->set_vertical_swing_sensor(id(ac01_vertical_swing));
