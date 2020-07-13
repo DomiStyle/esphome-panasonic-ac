@@ -21,22 +21,22 @@ static const uint8_t ESPPAC_MAX_TEMPERATURE = 30; // Maximum temperature as supp
 static const float ESPPAC_TEMPERATURE_STEP = 0.5; // Steps the temperature can be set in
 static const float ESPPAC_TEMPERATURE_TOLERANCE = 2; // The tolerance to allow when checking the climate state
 
-enum cmd_type
+enum class CommandType
 {
-  normal,
-  variable,
-  response,
-  resend
+  Normal,
+  Variable,
+  Response,
+  Resend
 };
 
-enum ac_state
+enum class ACState
 {
-  initializing, // Before first handshake packet is sent
-  handshake, // During the initial handshake
-  first_poll, // After the handshake, before polling for the first time
-  handshake_ending, // After the first poll, waiting for the last handshake packet
-  ready, // All done, ready to receive regular packets
-  failed // Initialization failed
+  Initializing, // Before first handshake packet is sent
+  Handshake, // During the initial handshake
+  FirstPoll, // After the handshake, before polling for the first time
+  HandshakeEnding, // After the first poll, waiting for the last handshake packet
+  Ready, // All done, ready to receive regular packets
+  Failed // Initialization failed
 };
 
 class PanasonicAC : public Component, public uart::UARTDevice, public climate::Climate
@@ -66,7 +66,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
     std::string horizontal_swing_state;
     bool nanoex_state = false; // Stores the state of nanoex to prevent duplicate packets
 
-    ac_state state = initializing; // Stores the internal state of the AC, used during initialization
+    ACState state = ACState::Initializing; // Stores the internal state of the AC, used during initialization
     bool waitingForResponse = false; // Set to true if we are waiting for a response
 
     byte transmitPacketCount = 0; // Counter used in packet (2nd byte) when we are sending packets
@@ -94,8 +94,8 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
     void handle_handshake_packet();
 
     void send_set_command();
-    void send_command(const byte* command, size_t commandLength, cmd_type type = normal, byte insertData = 0x00, int insertLocation = 0);
-    void send_packet(byte* packet, size_t packetLength, cmd_type type = normal);
+    void send_command(const byte* command, size_t commandLength, CommandType type = CommandType::Normal, byte insertData = 0x00, int insertLocation = 0);
+    void send_packet(byte* packet, size_t packetLength, CommandType type = CommandType::Normal);
 
     void determine_mode(byte mode);
     void determine_fan_speed(byte speed);

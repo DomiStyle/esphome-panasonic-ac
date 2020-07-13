@@ -53,13 +53,13 @@ void PanasonicAC::setup()
 
 void PanasonicAC::loop()
 {
-  if(state != ready)
+  if(state != ACState::Ready)
   {
     handle_init_packets(); // Handle initialization packets separate from normal packets
 
     if(millis() - initTime > ESPPAC_INIT_FAIL_TIMEOUT)
     {
-      state = failed;
+      state = ACState::Failed;
       mark_failed();
       return;
     }
@@ -75,7 +75,7 @@ void PanasonicAC::loop()
     waitingForResponse = false; // Set that we are not waiting for a response anymore since we received a valid one
     lastPacketReceived = millis(); // Set the time at which we received our last packet
 
-    if(state == ready || state == first_poll || state == handshake_ending) // Parse regular packets
+    if(state == ACState::Ready || state == ACState::FirstPoll || state == ACState::HandshakeEnding) // Parse regular packets
     {
       handle_packet(); // Handle regular packet
     }
@@ -100,7 +100,7 @@ void PanasonicAC::loop()
 
 void PanasonicAC::control(const climate::ClimateCall &call)
 {
-  if(this->state != ready)
+  if(this->state != ACState::Ready)
     return;
 
   ESP_LOGV(TAG, "AC control request");
@@ -232,7 +232,7 @@ void PanasonicAC::control(const climate::ClimateCall &call)
 
 void PanasonicAC::handle_poll()
 {
-  if(state == ready && millis() - lastPacketSent > ESPPAC_POLL_INTERVAL)
+  if(state == ACState::Ready && millis() - lastPacketSent > ESPPAC_POLL_INTERVAL)
   {
     ESP_LOGV(TAG, "Polling AC");
     send_command(CMD_POLL, sizeof(CMD_POLL));
@@ -241,7 +241,7 @@ void PanasonicAC::handle_poll()
 
 void PanasonicAC::handle_init_packets()
 {
-  if(state == initializing)
+  if(state == ACState::Initializing)
   {
     if(millis() - initTime > ESPPAC_INIT_TIMEOUT) // Handle handshake initialization
     {
@@ -250,17 +250,17 @@ void PanasonicAC::handle_init_packets()
       delay(3); // Add small delay to mimic real wifi adapter
       send_command(CMD_HANDSHAKE_2, sizeof(CMD_HANDSHAKE_2)); // Send second handshake packet, AC won't send a response but we will trigger a resend
 
-      state = handshake; // Update state to handshake started
+      state = ACState::Handshake; // Update state to handshake started
     }
   }
-  else if(state == first_poll && millis() - lastPacketSent > ESPPAC_FIRST_POLL_TIMEOUT) // Handle sending first poll
+  else if(state == ACState::FirstPoll && millis() - lastPacketSent > ESPPAC_FIRST_POLL_TIMEOUT) // Handle sending first poll
   {
     ESP_LOGD(TAG, "Polling for the first time");
     send_command(CMD_POLL, sizeof(CMD_POLL));
 
-    state = handshake_ending;
+    state = ACState::HandshakeEnding;
   }
-  else if(state == handshake_ending && millis() - lastPacketSent > ESPPAC_INIT_END_TIMEOUT) // Handle last handshake message
+  else if(state == ACState::HandshakeEnding && millis() - lastPacketSent > ESPPAC_INIT_END_TIMEOUT) // Handle last handshake message
   {
     ESP_LOGD(TAG, "Finishing handshake [16/16]");
     send_command(CMD_HANDSHAKE_16, sizeof(CMD_HANDSHAKE_16));
@@ -293,7 +293,7 @@ bool PanasonicAC::verify_packet()
     return false;
   }
 
-  if(state == ready && waitingForResponse) // If we were waiting for a response, check if the tx packet counter matches (if we are ready)
+  if(state == ACState::Ready && waitingForResponse) // If we were waiting for a response, check if the tx packet counter matches (if we are ready)
   {
     if(receiveBuffer[1] != transmitPacketCount - 1 && receiveBuffer[1] != 0xFE) // Check transmit packet counter
     {
@@ -301,7 +301,7 @@ bool PanasonicAC::verify_packet()
       receivePacketCount = receiveBuffer[1];
     }
   }
-  else if(state == ready) // If we were not waiting for a response, check if the rx packet counter matches (if we are ready)
+  else if(state == ACState::Ready) // If we were not waiting for a response, check if the rx packet counter matches (if we are ready)
   {
     if(receiveBuffer[1] != receivePacketCount) // Check receive packet counter
     {
@@ -513,7 +513,7 @@ void PanasonicAC::handle_packet()
   if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0x01) // Ping
   {
     ESP_LOGD(TAG, "Answering ping");
-    send_command(CMD_PING, sizeof(CMD_PING), response);
+    send_command(CMD_PING, sizeof(CMD_PING), CommandType::Response);
   }
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x89) // Received query response
   {
@@ -559,7 +559,7 @@ void PanasonicAC::handle_packet()
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x0A) // Report
   {
     ESP_LOGV(TAG, "Received report");
-    send_command(CMD_REPORT_ACK, sizeof(CMD_REPORT_ACK), response);
+    send_command(CMD_REPORT_ACK, sizeof(CMD_REPORT_ACK), CommandType::Response);
 
     if(receiveBufferIndex < 13)
     {
@@ -648,7 +648,7 @@ void PanasonicAC::handle_packet()
   else if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0x80) // Answer for handshake 16
   {
     ESP_LOGI(TAG, "Handshake completed");
-    state = ready;
+    state = ACState::Ready;
   }
   else
   {
@@ -722,13 +722,13 @@ void PanasonicAC::handle_handshake_packet()
   {
     ESP_LOGD(TAG, "Received rx counter [14/16]");
     receivePacketCount = receiveBuffer[1]; // Set rx packet counter
-    send_command(CMD_HANDSHAKE_14, sizeof(CMD_HANDSHAKE_14), response);
+    send_command(CMD_HANDSHAKE_14, sizeof(CMD_HANDSHAKE_14), CommandType::Response);
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x20) // Second unsolicited packet from AC
   {
     ESP_LOGD(TAG, "Answering handshake [15/16]");
-    state = first_poll; // Start delayed first poll
-    send_command(CMD_HANDSHAKE_15, sizeof(CMD_HANDSHAKE_15), response);
+    state = ACState::FirstPoll; // Start delayed first poll
+    send_command(CMD_HANDSHAKE_15, sizeof(CMD_HANDSHAKE_15), CommandType::Response);
   }
   else
   {
@@ -770,17 +770,17 @@ void PanasonicAC::send_set_command()
     packet[12 + (i * 4) + 3] = 0x00; // Unknown, either 0x00 or 0x01 or 0x02; overwritten by checksum on last key value pair
   }
 
-  send_packet(packet, packetLength, normal);
+  send_packet(packet, packetLength, CommandType::Normal);
   setQueueIndex = 0;
 }
 
-void PanasonicAC::send_command(const byte* command, size_t commandLength, cmd_type type, byte insertData, int insertLocation)
+void PanasonicAC::send_command(const byte* command, size_t commandLength, CommandType type, byte insertData, int insertLocation)
 {
   byte packet[commandLength + 3]; // Reserve space for upcoming packet
 
   for(int i = 0; i < commandLength; i++) // Loop through command
   {
-    if(type == variable && i == insertLocation)
+    if(type == CommandType::Variable && i == insertLocation)
     {
       packet[i + 2] = insertData; // Add to packet
     }
@@ -796,16 +796,16 @@ void PanasonicAC::send_command(const byte* command, size_t commandLength, cmd_ty
   send_packet(packet, commandLength + 3, type); // Actually send the constructed packet
 }
 
-void PanasonicAC::send_packet(byte* packet, size_t packetLength, cmd_type type)
+void PanasonicAC::send_packet(byte* packet, size_t packetLength, CommandType type)
 {
   byte checksum = ESPPAC_HEADER; // Checksum is calculated by adding all bytes together
   packet[0] = ESPPAC_HEADER; // Write header to packet
 
   byte packetCount = transmitPacketCount; // Set packet counter
 
-  if(type == response)
+  if(type == CommandType::Response)
     packetCount = receivePacketCount; // Set the packet counter to the rx counter
-  else if(type == resend)
+  else if(type == CommandType::Resend)
     packetCount = transmitPacketCount - 1; // Set the packet counter to the tx counter -1 (we are sending the same packet again)
 
   checksum += packetCount; // Add to checksum
@@ -821,14 +821,14 @@ void PanasonicAC::send_packet(byte* packet, size_t packetLength, cmd_type type)
 
   lastPacketSent = millis(); // Save the time when we sent the last packet
 
-  if(type == normal || type == variable) // Do not increase tx counter if this was a response or if this was a resent packet
+  if(type == CommandType::Normal || type == CommandType::Variable) // Do not increase tx counter if this was a response or if this was a resent packet
   {
     if(transmitPacketCount == 0xFE)
       transmitPacketCount = 0x01; // Special case, roll over transmit counter after 0xFE
     else
       transmitPacketCount++; // Increase tx packet counter if this wasn't a response
   }
-  else if(type == response)
+  else if(type == CommandType::Response)
   {
     if(receivePacketCount == 0xFE)
       receivePacketCount = 0x01; // Special case, roll over receive counter after 0xFE
@@ -836,7 +836,7 @@ void PanasonicAC::send_packet(byte* packet, size_t packetLength, cmd_type type)
       receivePacketCount++; // Increase rx counter if this was a response
   }
 
-  if(type != response) // Don't wait for a response for responses
+  if(type != CommandType::Response) // Don't wait for a response for responses
     waitingForResponse = true; // Mark that we are waiting for a response
 
   write_array(packet, packetLength); // Write to UART
@@ -868,7 +868,7 @@ void PanasonicAC::handle_resend()
   if(waitingForResponse && millis() - lastPacketSent > ESPPAC_RESPONSE_TIMEOUT && receiveBufferIndex == 0) // Check if AC failed to respond in time and resend packet, if nothing was received yet
   {
     ESP_LOGD(TAG, "Resending previous packet");
-    send_command(lastCommand, lastCommandLength, resend);
+    send_command(lastCommand, lastCommandLength, CommandType::Resend);
   }
 }
 
@@ -933,7 +933,7 @@ void PanasonicAC::set_vertical_swing_sensor(text_sensor::TextSensor *vertical_sw
 
   this->vertical_swing_sensor->add_on_state_callback([this](std::string value)
   {
-    if(this->state != ready)
+    if(this->state != ACState::Ready)
       return;
 
     if(value != this->vertical_swing_state) // Ignore if already the correct state
@@ -962,7 +962,7 @@ void PanasonicAC::set_horizontal_swing_sensor(text_sensor::TextSensor *horizonta
 
   this->horizontal_swing_sensor->add_on_state_callback([this](std::string value)
   {
-    if(this->state != ready)
+    if(this->state != ACState::Ready)
       return;
 
     if(value != this->horizontal_swing_state) // Ignore if already the correct state
@@ -991,7 +991,7 @@ void PanasonicAC::set_nanoex_switch(switch_::Switch *nanoex_switch)
 
   this->nanoex_switch->add_on_state_callback([this](bool value)
   {
-    if(this->state != ready)
+    if(this->state != ACState::Ready)
       return;
 
     if(value != this->nanoex_state) // Ignore if already the correct state
