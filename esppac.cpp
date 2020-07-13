@@ -48,7 +48,7 @@ void PanasonicAC::setup()
   this->swing_mode = climate::CLIMATE_SWING_OFF;
   this->publish_state(); // Post dummy state so Home Assistant doesn't disconnect
 
-  ESP_LOGI(TAG, "Panasonic AC component v%s", ESPPAC_VERSION);
+  ESP_LOGI(TAG, "Panasonic AC component v%s starting...", ESPPAC_VERSION);
 }
 
 void PanasonicAC::loop()
@@ -647,7 +647,7 @@ void PanasonicAC::handle_packet()
   }
   else if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0x80) // Answer for handshake 16
   {
-    ESP_LOGI(TAG, "Handshake completed");
+    ESP_LOGI(TAG, "Panasonic AC component v%s initialized", ESPPAC_VERSION);
     state = ACState::Ready;
   }
   else
