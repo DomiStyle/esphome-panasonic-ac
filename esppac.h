@@ -24,7 +24,6 @@ static const float ESPPAC_TEMPERATURE_TOLERANCE = 2; // The tolerance to allow w
 enum class CommandType
 {
   Normal,
-  Variable,
   Response,
   Resend
 };
@@ -94,7 +93,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
     void handle_handshake_packet();
 
     void send_set_command();
-    void send_command(const byte* command, size_t commandLength, CommandType type = CommandType::Normal, byte insertData = 0x00, int insertLocation = 0);
+    void send_command(const byte* command, size_t commandLength, CommandType type = CommandType::Normal);
     void send_packet(byte* packet, size_t packetLength, CommandType type = CommandType::Normal);
 
     void determine_mode(byte mode);

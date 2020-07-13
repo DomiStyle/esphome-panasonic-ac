@@ -774,20 +774,13 @@ void PanasonicAC::send_set_command()
   setQueueIndex = 0;
 }
 
-void PanasonicAC::send_command(const byte* command, size_t commandLength, CommandType type, byte insertData, int insertLocation)
+void PanasonicAC::send_command(const byte* command, size_t commandLength, CommandType type)
 {
   byte packet[commandLength + 3]; // Reserve space for upcoming packet
 
   for(int i = 0; i < commandLength; i++) // Loop through command
   {
-    if(type == CommandType::Variable && i == insertLocation)
-    {
-      packet[i + 2] = insertData; // Add to packet
-    }
-    else
-    {
       packet[i + 2] = command[i]; // Add to packet
-    }
   }
 
   lastCommand = command; // Store the last command we sent
@@ -821,7 +814,7 @@ void PanasonicAC::send_packet(byte* packet, size_t packetLength, CommandType typ
 
   lastPacketSent = millis(); // Save the time when we sent the last packet
 
-  if(type == CommandType::Normal || type == CommandType::Variable) // Do not increase tx counter if this was a response or if this was a resent packet
+  if(type == CommandType::Normal) // Do not increase tx counter if this was a response or if this was a resent packet
   {
     if(transmitPacketCount == 0xFE)
       transmitPacketCount = 0x01; // Special case, roll over transmit counter after 0xFE
