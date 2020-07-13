@@ -2,7 +2,7 @@
  * Handshake commands
  */
 
-static const byte CMD_HANDSHAKE_1[]
+static const byte ESPPAC_CMD_HANDSHAKE_1[]
 {
   0x00,
   0x06,
@@ -11,7 +11,7 @@ static const byte CMD_HANDSHAKE_1[]
 };
 
 // Used to sync the controller packet counter; repeat until AC responds
-static const byte CMD_HANDSHAKE_2[]
+static const byte ESPPAC_CMD_HANDSHAKE_2[]
 {
   0x00,
   0x09,
@@ -19,7 +19,7 @@ static const byte CMD_HANDSHAKE_2[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_3[]
+static const byte ESPPAC_CMD_HANDSHAKE_3[]
 {
   0x00,
   0x0C,
@@ -27,7 +27,7 @@ static const byte CMD_HANDSHAKE_3[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_4[]
+static const byte ESPPAC_CMD_HANDSHAKE_4[]
 {
   0x00,
   0x10,
@@ -36,7 +36,7 @@ static const byte CMD_HANDSHAKE_4[]
   0x20
 };
 
-static const byte CMD_HANDSHAKE_5[]
+static const byte ESPPAC_CMD_HANDSHAKE_5[]
 {
   0x00,
   0x11,
@@ -46,7 +46,7 @@ static const byte CMD_HANDSHAKE_5[]
   0x01
 };
 
-static const byte CMD_HANDSHAKE_6[]
+static const byte ESPPAC_CMD_HANDSHAKE_6[]
 {
   0x00,
   0x12,
@@ -58,7 +58,7 @@ static const byte CMD_HANDSHAKE_6[]
   0x12
 };
 
-static const byte CMD_HANDSHAKE_7[]
+static const byte ESPPAC_CMD_HANDSHAKE_7[]
 {
   0x00,
   0x41,
@@ -66,7 +66,7 @@ static const byte CMD_HANDSHAKE_7[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_8[]
+static const byte ESPPAC_CMD_HANDSHAKE_8[]
 {
   0x01,
   0x4C,
@@ -74,7 +74,7 @@ static const byte CMD_HANDSHAKE_8[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_9[]
+static const byte ESPPAC_CMD_HANDSHAKE_9[]
 {
   0x10,
   0x00,
@@ -82,7 +82,7 @@ static const byte CMD_HANDSHAKE_9[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_10[]
+static const byte ESPPAC_CMD_HANDSHAKE_10[]
 {
   0x10,
   0x01,
@@ -95,7 +95,7 @@ static const byte CMD_HANDSHAKE_10[]
   0x01
 };
 
-static const byte CMD_HANDSHAKE_11[]
+static const byte ESPPAC_CMD_HANDSHAKE_11[]
 {
   0x00,
   0x18,
@@ -103,7 +103,7 @@ static const byte CMD_HANDSHAKE_11[]
   0x00
 };
 
-static const byte CMD_HANDSHAKE_12[]
+static const byte ESPPAC_CMD_HANDSHAKE_12[]
 {
   0x01,
   0x00,
@@ -112,7 +112,7 @@ static const byte CMD_HANDSHAKE_12[]
   0x10
 };
 
-static const byte CMD_HANDSHAKE_13[]
+static const byte ESPPAC_CMD_HANDSHAKE_13[]
 {
   0x10,
   0x08,
@@ -130,7 +130,7 @@ static const byte CMD_HANDSHAKE_13[]
 };
 
 // As response
-static const byte CMD_HANDSHAKE_14[]
+static const byte ESPPAC_CMD_HANDSHAKE_14[]
 {
   0x01,
   0x89,
@@ -146,7 +146,7 @@ static const byte CMD_HANDSHAKE_14[]
 };
 
 // As response
-static const byte CMD_HANDSHAKE_15[]
+static const byte ESPPAC_CMD_HANDSHAKE_15[]
 {
   0x00,
   0xA0,
@@ -173,8 +173,8 @@ static const byte CMD_HANDSHAKE_15[]
   0x33
 };
 
-// Variation of CMD_HANDSHAKE_12
-static const byte CMD_HANDSHAKE_16[]
+// Variation of ESPPAC_CMD_HANDSHAKE_12
+static const byte ESPPAC_CMD_HANDSHAKE_16[]
 {
   0x01,
   0x00,
@@ -186,7 +186,7 @@ static const byte CMD_HANDSHAKE_16[]
 /*
  * Ping command, gets sent by AC every 60s
  */
-static const byte CMD_PING[]
+static const byte ESPPAC_CMD_PING[]
 {
   0x01,
   0x81,
@@ -197,7 +197,7 @@ static const byte CMD_PING[]
   0x12
 };
 
-static const byte CMD_POLL[]
+static const byte ESPPAC_CMD_POLL[]
 {
   0x10,
   0x09,
@@ -264,7 +264,7 @@ static const byte CMD_POLL[]
 /*
  * Ack packet sent when AC sends us a report
  */
-static const byte CMD_REPORT_ACK[]
+static const byte ESPPAC_CMD_REPORT_ACK[]
 {
   0x10,
   0x8A,

@@ -235,7 +235,7 @@ void PanasonicAC::handle_poll()
   if(state == ACState::Ready && millis() - lastPacketSent > ESPPAC_POLL_INTERVAL)
   {
     ESP_LOGV(TAG, "Polling AC");
-    send_command(CMD_POLL, sizeof(CMD_POLL));
+    send_command(ESPPAC_CMD_POLL, sizeof(ESPPAC_CMD_POLL));
   }
 }
 
@@ -246,9 +246,9 @@ void PanasonicAC::handle_init_packets()
     if(millis() - initTime > ESPPAC_INIT_TIMEOUT) // Handle handshake initialization
     {
       ESP_LOGD(TAG, "Starting handshake [1/16]");
-      send_command(CMD_HANDSHAKE_1, sizeof(CMD_HANDSHAKE_1)); // Send first handshake packet, AC won't send a response
+      send_command(ESPPAC_CMD_HANDSHAKE_1, sizeof(ESPPAC_CMD_HANDSHAKE_1)); // Send first handshake packet, AC won't send a response
       delay(3); // Add small delay to mimic real wifi adapter
-      send_command(CMD_HANDSHAKE_2, sizeof(CMD_HANDSHAKE_2)); // Send second handshake packet, AC won't send a response but we will trigger a resend
+      send_command(ESPPAC_CMD_HANDSHAKE_2, sizeof(ESPPAC_CMD_HANDSHAKE_2)); // Send second handshake packet, AC won't send a response but we will trigger a resend
 
       state = ACState::Handshake; // Update state to handshake started
     }
@@ -256,14 +256,14 @@ void PanasonicAC::handle_init_packets()
   else if(state == ACState::FirstPoll && millis() - lastPacketSent > ESPPAC_FIRST_POLL_TIMEOUT) // Handle sending first poll
   {
     ESP_LOGD(TAG, "Polling for the first time");
-    send_command(CMD_POLL, sizeof(CMD_POLL));
+    send_command(ESPPAC_CMD_POLL, sizeof(ESPPAC_CMD_POLL));
 
     state = ACState::HandshakeEnding;
   }
   else if(state == ACState::HandshakeEnding && millis() - lastPacketSent > ESPPAC_INIT_END_TIMEOUT) // Handle last handshake message
   {
     ESP_LOGD(TAG, "Finishing handshake [16/16]");
-    send_command(CMD_HANDSHAKE_16, sizeof(CMD_HANDSHAKE_16));
+    send_command(ESPPAC_CMD_HANDSHAKE_16, sizeof(ESPPAC_CMD_HANDSHAKE_16));
 
     // State is set to ready in the response to this packet
   }
@@ -513,7 +513,7 @@ void PanasonicAC::handle_packet()
   if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0x01) // Ping
   {
     ESP_LOGD(TAG, "Answering ping");
-    send_command(CMD_PING, sizeof(CMD_PING), CommandType::Response);
+    send_command(ESPPAC_CMD_PING, sizeof(ESPPAC_CMD_PING), CommandType::Response);
   }
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x89) // Received query response
   {
@@ -559,7 +559,7 @@ void PanasonicAC::handle_packet()
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x0A) // Report
   {
     ESP_LOGV(TAG, "Received report");
-    send_command(CMD_REPORT_ACK, sizeof(CMD_REPORT_ACK), CommandType::Response);
+    send_command(ESPPAC_CMD_REPORT_ACK, sizeof(ESPPAC_CMD_REPORT_ACK), CommandType::Response);
 
     if(receiveBufferIndex < 13)
     {
@@ -661,57 +661,57 @@ void PanasonicAC::handle_handshake_packet()
   if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x89) // Answer for handshake 2
   {
     ESP_LOGD(TAG, "Answering handshake [2/16]");
-    send_command(CMD_HANDSHAKE_3, sizeof(CMD_HANDSHAKE_3));
+    send_command(ESPPAC_CMD_HANDSHAKE_3, sizeof(ESPPAC_CMD_HANDSHAKE_3));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x8C) // Answer for handshake 3
   {
     ESP_LOGD(TAG, "Answering handshake [3/16]");
-    send_command(CMD_HANDSHAKE_4, sizeof(CMD_HANDSHAKE_4));
+    send_command(ESPPAC_CMD_HANDSHAKE_4, sizeof(ESPPAC_CMD_HANDSHAKE_4));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x90) // Answer for handshake 4
   {
     ESP_LOGD(TAG, "Answering handshake [4/16]");
-    send_command(CMD_HANDSHAKE_5, sizeof(CMD_HANDSHAKE_5));
+    send_command(ESPPAC_CMD_HANDSHAKE_5, sizeof(ESPPAC_CMD_HANDSHAKE_5));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x91) // Answer for handshake 5
   {
     ESP_LOGD(TAG, "Answering handshake [5/16]");
-    send_command(CMD_HANDSHAKE_6, sizeof(CMD_HANDSHAKE_6));
+    send_command(ESPPAC_CMD_HANDSHAKE_6, sizeof(ESPPAC_CMD_HANDSHAKE_6));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x92) // Answer for handshake 6
   {
     ESP_LOGD(TAG, "Answering handshake [6/16]");
-    send_command(CMD_HANDSHAKE_7, sizeof(CMD_HANDSHAKE_7));
+    send_command(ESPPAC_CMD_HANDSHAKE_7, sizeof(ESPPAC_CMD_HANDSHAKE_7));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0xC1) // Answer for handshake 7
   {
     ESP_LOGD(TAG, "Answering handshake [7/16]");
-    send_command(CMD_HANDSHAKE_8, sizeof(CMD_HANDSHAKE_8));
+    send_command(ESPPAC_CMD_HANDSHAKE_8, sizeof(ESPPAC_CMD_HANDSHAKE_8));
   }
   else if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0xCC) // Answer for handshake 8
   {
     ESP_LOGD(TAG, "Answering handshake [8/16]");
-    send_command(CMD_HANDSHAKE_9, sizeof(CMD_HANDSHAKE_9));
+    send_command(ESPPAC_CMD_HANDSHAKE_9, sizeof(ESPPAC_CMD_HANDSHAKE_9));
   }
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x80) // Answer for handshake 9
   {
     ESP_LOGD(TAG, "Answering handshake [9/16]");
-    send_command(CMD_HANDSHAKE_10, sizeof(CMD_HANDSHAKE_10));
+    send_command(ESPPAC_CMD_HANDSHAKE_10, sizeof(ESPPAC_CMD_HANDSHAKE_10));
   }
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x81) // Answer for handshake 10
   {
     ESP_LOGD(TAG, "Answering handshake [10/16]");
-    send_command(CMD_HANDSHAKE_11, sizeof(CMD_HANDSHAKE_11));
+    send_command(ESPPAC_CMD_HANDSHAKE_11, sizeof(ESPPAC_CMD_HANDSHAKE_11));
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x98) // Answer for handshake 11
   {
     ESP_LOGD(TAG, "Answering handshake [11/16]");
-    send_command(CMD_HANDSHAKE_12, sizeof(CMD_HANDSHAKE_12));
+    send_command(ESPPAC_CMD_HANDSHAKE_12, sizeof(ESPPAC_CMD_HANDSHAKE_12));
   }
   else if(receiveBuffer[2] == 0x01 && receiveBuffer[3] == 0x80) // Answer for handshake 12
   {
     ESP_LOGD(TAG, "Answering handshake [12/16]");
-    send_command(CMD_HANDSHAKE_13, sizeof(CMD_HANDSHAKE_13));
+    send_command(ESPPAC_CMD_HANDSHAKE_13, sizeof(ESPPAC_CMD_HANDSHAKE_13));
   }
   else if(receiveBuffer[2] == 0x10 && receiveBuffer[3] == 0x88) // Answer for handshake 13
   {
@@ -722,13 +722,13 @@ void PanasonicAC::handle_handshake_packet()
   {
     ESP_LOGD(TAG, "Received rx counter [14/16]");
     receivePacketCount = receiveBuffer[1]; // Set rx packet counter
-    send_command(CMD_HANDSHAKE_14, sizeof(CMD_HANDSHAKE_14), CommandType::Response);
+    send_command(ESPPAC_CMD_HANDSHAKE_14, sizeof(ESPPAC_CMD_HANDSHAKE_14), CommandType::Response);
   }
   else if(receiveBuffer[2] == 0x00 && receiveBuffer[3] == 0x20) // Second unsolicited packet from AC
   {
     ESP_LOGD(TAG, "Answering handshake [15/16]");
     state = ACState::FirstPoll; // Start delayed first poll
-    send_command(CMD_HANDSHAKE_15, sizeof(CMD_HANDSHAKE_15), CommandType::Response);
+    send_command(ESPPAC_CMD_HANDSHAKE_15, sizeof(ESPPAC_CMD_HANDSHAKE_15), CommandType::Response);
   }
   else
   {
