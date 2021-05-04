@@ -2,7 +2,7 @@
 
 using namespace esphome;
 
-static const char* ESPPAC_VERSION = "0.9.6";
+static const char* ESPPAC_VERSION = "1.0.0";
 static const char* TAG = "esppac";
 
 static const byte ESPPAC_HEADER = 0x5A; // The header of the protocol, every packet starts with this
@@ -20,6 +20,7 @@ static const uint8_t ESPPAC_MIN_TEMPERATURE = 16; // Minimum temperature as repo
 static const uint8_t ESPPAC_MAX_TEMPERATURE = 30; // Maximum temperature as supported by Panasonic app
 static const float ESPPAC_TEMPERATURE_STEP = 0.5; // Steps the temperature can be set in
 static const float ESPPAC_TEMPERATURE_TOLERANCE = 2; // The tolerance to allow when checking the climate state
+static const uint8_t ESPPAC_TEMPERATURE_THRESHOLD = 100; // Maximum temperature the AC can report before considering the temperature as invalid
 
 enum class CommandType
 {
