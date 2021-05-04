@@ -534,15 +534,8 @@ void PanasonicAC::handle_packet()
 
     this->target_temperature = receiveBuffer[22] * ESPPAC_TEMPERATURE_STEP; // Set temperature
 
-    if(receiveBuffer[62] > ESPPAC_TEMPERATURE_THRESHOLD)
-      ESP_LOGD(TAG, "Received out of range inside temperature");
-    else
-      this->current_temperature = receiveBuffer[62]; // Set current (inside) temperature; no temperature steps
-
-    if(receiveBuffer[66] > ESPPAC_TEMPERATURE_THRESHOLD)
-      ESP_LOGD(TAG, "Received out of range outside temperature");
-    else
-      update_outside_temperature(receiveBuffer[66]);
+    this->current_temperature = (int8_t)receiveBuffer[62]; // Set current (inside) temperature; no temperature steps
+    update_outside_temperature((int8_t)receiveBuffer[66]); // Set current (outside) temperature; cast both to char/int8 before setting
 
     update_swing_horizontal(receiveBuffer[34]);
 
