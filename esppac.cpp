@@ -602,7 +602,7 @@ void PanasonicAC::handle_packet()
         break;
         case 0x31: // Target temperature
           ESP_LOGV(TAG, "Received target temperature");
-          update_target_temperature((int8_t)receiveBuffer[currentIndex + 2])
+          update_target_temperature((int8_t)receiveBuffer[currentIndex + 2]);
         break;
         case 0xA0: // Fan speed
           ESP_LOGV(TAG, "Received fan speed");
