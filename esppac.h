@@ -103,7 +103,9 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
     void determine_swing(byte swing);
     void determine_action();
 
-    void update_outside_temperature(byte temperature);
+    void update_outside_temperature(int8_t temperature);
+    void update_current_temperature(int8_t temperature);
+    void update_target_temperature(int8_t temperature);
     void update_swing_horizontal(byte swing);
     void update_swing_vertical(byte swing);
     void update_nanoex(byte nanoex);

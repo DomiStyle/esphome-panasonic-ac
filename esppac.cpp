@@ -532,26 +532,9 @@ void PanasonicAC::handle_packet()
       determine_mode(receiveBuffer[18]); // Check mode if power state is not off
     }
 
-    int8_t targetTemperature = receiveBuffer[22] * ESPPAC_TEMPERATURE_STEP;
-
-    if(targetTemperature > ESPPAC_TEMPERATURE_THRESHOLD)
-      ESP_LOGW(TAG, "Received out of range target temperature");
-    else
-      this->target_temperature = targetTemperature; // Set temperature
-
-    int8_t currentTemperature = (int8_t)receiveBuffer[62];
-
-    if(currentTemperature > ESPPAC_TEMPERATURE_THRESHOLD)
-      ESP_LOGW(TAG, "Received out of range inside temperature");
-    else
-      this->current_temperature = currentTemperature; // Set current (inside) temperature; no temperature steps
-
-    int8_t outsideTemperature = (int8_t)receiveBuffer[66];
-
-    if(outsideTemperature > ESPPAC_TEMPERATURE_THRESHOLD)
-      ESP_LOGW(TAG, "Received out of range outside temperature");
-    else
-      update_outside_temperature(outsideTemperature); // Set current (outside) temperature; cast both to char/int8 before setting
+    update_target_temperature((int8_t)receiveBuffer[22]);
+    update_current_temperature((int8_t)receiveBuffer[62]);
+    update_outside_temperature((int8_t)receiveBuffer[66]); // Set current (outside) temperature
 
     update_swing_horizontal(receiveBuffer[34]);
 
@@ -619,13 +602,7 @@ void PanasonicAC::handle_packet()
         break;
         case 0x31: // Target temperature
           ESP_LOGV(TAG, "Received target temperature");
-
-          int8_t targetTemperature = receiveBuffer[currentIndex + 2] * ESPPAC_TEMPERATURE_STEP;
-
-          if(targetTemperature > ESPPAC_TEMPERATURE_THRESHOLD)
-            ESP_LOGW(TAG, "Received out of range target temperature");
-          else
-            this->target_temperature = targetTemperature;
+          update_target_temperature((int8_t)receiveBuffer[currentIndex + 2])
         break;
         case 0xA0: // Fan speed
           ESP_LOGV(TAG, "Received fan speed");
@@ -1027,10 +1004,40 @@ void PanasonicAC::set_nanoex_switch(switch_::Switch *nanoex_switch)
   });
 }
 
-void PanasonicAC::update_outside_temperature(byte temperature)
+void PanasonicAC::update_outside_temperature(int8_t temperature)
 {
+  if(temperature > ESPPAC_TEMPERATURE_THRESHOLD)
+  {
+      ESP_LOGW(TAG, "Received out of range outside temperature");
+      return;
+  }
+
   if(this->outside_temperature_sensor != NULL && this->outside_temperature_sensor->state != temperature)
     this->outside_temperature_sensor->publish_state(temperature); // Set current (outside) temperature; no temperature steps
+}
+
+void PanasonicAC::update_current_temperature(int8_t temperature)
+{
+  if(temperature > ESPPAC_TEMPERATURE_THRESHOLD)
+  {
+      ESP_LOGW(TAG, "Received out of range inside temperature");
+      return;
+  }
+
+  this->current_temperature = temperature;
+}
+
+void PanasonicAC::update_target_temperature(int8_t temperature)
+{
+  temperature = temperature * ESPPAC_TEMPERATURE_STEP;
+
+  if(temperature > ESPPAC_TEMPERATURE_THRESHOLD)
+  {
+      ESP_LOGW(TAG, "Received out of range target temperature");
+      return;
+  }
+
+  this->target_temperature = temperature;
 }
 
 void PanasonicAC::update_swing_horizontal(byte swing)
