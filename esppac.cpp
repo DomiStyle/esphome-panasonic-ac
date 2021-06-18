@@ -11,7 +11,7 @@ climate::ClimateTraits PanasonicAC::traits()
 
   traits.set_supports_action(true);
   traits.set_supports_current_temperature(true);
-  traits.set_supports_auto_mode(true);
+  traits.set_supports_heat_cool_mode(true);
   traits.set_supports_cool_mode(true);
   traits.set_supports_heat_mode(true);
   traits.set_supports_dry_mode(true);
@@ -123,7 +123,7 @@ void PanasonicAC::control(const climate::ClimateCall &call)
         set_value(0xB0, 0x44);
         set_value(0x80, 0x30);
       break;
-      case climate::CLIMATE_MODE_AUTO:
+      case climate::CLIMATE_MODE_HEAT_COOL:
         set_value(0xB0, 0x41);
         set_value(0x80, 0x30);
       break;
@@ -337,7 +337,7 @@ void PanasonicAC::determine_mode(byte mode)
   switch(mode) // Check mode
   {
     case 0x41: // Auto
-      this->mode = climate::CLIMATE_MODE_AUTO;
+      this->mode = climate::CLIMATE_MODE_HEAT_COOL;
     break;
     case 0x42: // Cool
       this->mode = climate::CLIMATE_MODE_COOL;
@@ -438,11 +438,11 @@ void PanasonicAC::determine_action()
   {
     this->action = climate::CLIMATE_ACTION_DRYING;
   }
-  else if((this->mode == climate::CLIMATE_MODE_COOL || this->mode == climate::CLIMATE_MODE_AUTO) && this->current_temperature + ESPPAC_TEMPERATURE_TOLERANCE >= this->target_temperature)
+  else if((this->mode == climate::CLIMATE_MODE_COOL || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature + ESPPAC_TEMPERATURE_TOLERANCE >= this->target_temperature)
   {
     this->action = climate::CLIMATE_ACTION_COOLING;
   }
-  else if((this->mode == climate::CLIMATE_MODE_HEAT || this->mode == climate::CLIMATE_MODE_AUTO) && this->current_temperature - ESPPAC_TEMPERATURE_TOLERANCE <= this->target_temperature)
+  else if((this->mode == climate::CLIMATE_MODE_HEAT || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature - ESPPAC_TEMPERATURE_TOLERANCE <= this->target_temperature)
   {
     this->action = climate::CLIMATE_ACTION_HEATING;
   }
