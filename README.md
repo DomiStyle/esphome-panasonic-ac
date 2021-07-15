@@ -24,7 +24,7 @@ Tested on ESP32, should work on ESP8266 but ESP32 is preferred for the multiple 
 * Soldering iron
 * Wires to solder from Logic converter to ESP
 * Heat shrink
-* ESPHome 1.15.0 or newer
+* ESPHome 1.19.1 or newer
 
 # Notes
 
