@@ -31,7 +31,7 @@ Tested on ESP32, should work on ESP8266 but ESP32 is preferred for the multiple 
 * **Make sure to disconnect mains power before opening your AC, the mains contacts are exposed and can be touched by accident!**
 * **Do not connect your ESP32/ESP8266 directly to the AC, the AC uses 5V while the ESPs use 3.3V!**
 * **While installation is fairly straightforward I do not take any responsibility for any damage done to you or your AC during installation**
-* This library was only tested with the CN-WLAN connector, not on the CN-CNT connector that the old wifi adapter uses.
+* This library was only tested with the CN-WLAN connector, not on the CN-CNT connector that the old wifi adapter uses. **Make sure your AC can use the Panasonic DNSK-P11.**
 
 # Software installation
 
@@ -55,8 +55,10 @@ This hardware installation guide assumes you already have a Panasonic DNSK-P11 i
 | -        | VCC/HV | 5V | Provides the ESP32 with power from the AC, make sure to connect it to the high voltage side if your logic converter has one |
 | 3.3V      | VCC/LV | - | Connect the logic converter to 3.3V on the LV side |
 | GND       | GND    | GND | Connect any ground from the ESP32 to the ground of the logic converter low voltage side |
-| GPIO16    | LV1    | RX | Connect GPIO16 to the first of your logic converter channels |
-| GPIO17    | LV2    | TX | Connect GPIO17 to the second of your logic converter channels |
+| GPIO16    | LV1    | - | Connect GPIO16 to the first of your logic converter channels (Low voltage) |
+| GPIO17    | LV2    | - | Connect GPIO17 to the second of your logic converter channels (Low voltage |
+| -    | HV1    | RX | Connect the first of your logic converter channels to the AC RX pin (High voltage) |
+| -    | HV2    | TX | Connect the second of your logic converter channels to the AX TX pin (High voltage) |
 
 * Disconnect the AC mains supply
 * Open up your AC according to the manual
