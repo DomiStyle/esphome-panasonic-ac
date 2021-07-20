@@ -10,30 +10,46 @@ climate::ClimateTraits PanasonicAC::traits()
   auto traits = climate::ClimateTraits();
 
   traits.set_supports_action(true);
+
   traits.set_supports_current_temperature(true);
-  traits.set_supports_heat_cool_mode(true);
-  traits.set_supports_cool_mode(true);
-  traits.set_supports_heat_mode(true);
-  traits.set_supports_dry_mode(true);
-  traits.set_supports_fan_only_mode(true);
   traits.set_supports_two_point_target_temperature(false);
-  traits.set_supports_away(false);
   traits.set_visual_min_temperature(ESPPAC_MIN_TEMPERATURE);
   traits.set_visual_max_temperature(ESPPAC_MAX_TEMPERATURE);
   traits.set_visual_temperature_step(ESPPAC_TEMPERATURE_STEP);
-  traits.set_supports_fan_mode_on(false);
-  traits.set_supports_fan_mode_off(false);
-  traits.set_supports_fan_mode_auto(true);
-  traits.set_supports_fan_mode_focus(true);
-  traits.set_supports_fan_mode_diffuse(true);
-  traits.set_supports_fan_mode_low(true);
-  traits.set_supports_fan_mode_medium(true);
-  traits.set_supports_fan_mode_middle(true);
-  traits.set_supports_fan_mode_high(true);
-  traits.set_supports_swing_mode_off(true);
-  traits.set_supports_swing_mode_both(true);
-  traits.set_supports_swing_mode_vertical(true);
-  traits.set_supports_swing_mode_horizontal(true);
+
+  traits.set_supported_modes(
+  {
+    climate::CLIMATE_MODE_OFF,
+    climate::CLIMATE_MODE_HEAT_COOL,
+    climate::CLIMATE_MODE_COOL,
+    climate::CLIMATE_MODE_HEAT,
+    climate::CLIMATE_MODE_FAN_ONLY,
+    climate::CLIMATE_MODE_DRY
+  });
+
+  traits.set_supported_fan_modes(
+  {
+    climate::CLIMATE_FAN_AUTO,
+    climate::CLIMATE_FAN_LOW,
+    climate::CLIMATE_FAN_MEDIUM,
+    climate::CLIMATE_FAN_HIGH,
+    climate::CLIMATE_FAN_MIDDLE,
+    climate::CLIMATE_FAN_FOCUS
+  });
+
+  traits.set_supported_swing_modes(
+  {
+    climate::CLIMATE_SWING_OFF,
+    climate::CLIMATE_SWING_BOTH,
+    climate::CLIMATE_SWING_VERTICAL,
+    climate::CLIMATE_SWING_HORIZONTAL
+  });
+
+  traits.set_supported_presets(
+  {
+    climate::CLIMATE_PRESET_BOOST, // Powerful
+    climate::CLIMATE_PRESET_ECO // Quiet
+  });
 
   return traits;
 }

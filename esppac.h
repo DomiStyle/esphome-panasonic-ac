@@ -2,7 +2,7 @@
 
 using namespace esphome;
 
-static const char* ESPPAC_VERSION = "1.1.0";
+static const char* ESPPAC_VERSION = "1.2.0";
 static const char* TAG = "esppac";
 
 static const byte ESPPAC_HEADER = 0x5A; // The header of the protocol, every packet starts with this
