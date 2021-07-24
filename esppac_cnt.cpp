@@ -43,6 +43,173 @@ namespace ESPPAC
 
     void PanasonicACCNT::control(const climate::ClimateCall &call)
     {
+      if(this->state != ACState::Ready)
+        return;
+
+      PanasonicAC::control(call);
+
+      if(call.get_mode().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested mode change");
+
+        switch(*call.get_mode())
+        {
+          case climate::CLIMATE_MODE_COOL:
+            this->data[0] = 0x34;
+          break;
+          case climate::CLIMATE_MODE_HEAT:
+            this->data[0] = 0x44;
+          break;
+          case climate::CLIMATE_MODE_DRY:
+            this->data[0] = 0x24;
+          break;
+          case climate::CLIMATE_MODE_HEAT_COOL:
+            this->data[0] = 0x04;
+          break;
+          case climate::CLIMATE_MODE_FAN_ONLY:
+            this->data[0] = 0x64;
+          break;
+          case climate::CLIMATE_MODE_OFF:
+            this->data[0] = this->data[0] & 0xF0; // Strip right nib to turn AC off
+          break;
+          default:
+            ESP_LOGV(ESPPAC::TAG, "Unsupported mode requested");
+          break;
+        }
+      }
+
+      if(call.get_target_temperature().has_value())
+      {
+        this->data[1] = *call.get_target_temperature() * 2;
+      }
+
+      if(call.get_fan_mode().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested fan mode change");
+
+        switch(*call.get_fan_mode())
+        {
+          case climate::CLIMATE_FAN_AUTO:
+            this->data[3] = 0xA0;
+          break;
+          case climate::CLIMATE_FAN_LOW:
+            this->data[3] = 0x30;
+          break;
+          case climate::CLIMATE_FAN_MEDIUM:
+            this->data[3] = 0x40;
+          break;
+          case climate::CLIMATE_FAN_MIDDLE:
+            this->data[3] = 0x50;
+          break;
+          case climate::CLIMATE_FAN_HIGH:
+            this->data[3] = 0x60;
+          break;
+          case climate::CLIMATE_FAN_FOCUS:
+            this->data[3] = 0x70;
+          break;
+          default:
+            ESP_LOGV(ESPPAC::TAG, "Unsupported fan mode requested");
+          break;
+        }
+      }
+
+      if(call.get_swing_mode().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested swing mode change");
+
+        switch(*call.get_swing_mode())
+        {
+          case climate::CLIMATE_SWING_BOTH:
+            this->data[4] = 0xFD;
+          break;
+          case climate::CLIMATE_SWING_OFF:
+            this->data[4] = 0x36; // Reset both to center
+          break;
+          case climate::CLIMATE_SWING_VERTICAL:
+            this->data[4] = 0xF6; // Swing vertical, horizontal center
+          break;
+          case climate::CLIMATE_SWING_HORIZONTAL:
+            this->data[4] = 0x3D; // Swing horizontal, vertical center
+          break;
+          default:
+            ESP_LOGV(ESPPAC::TAG, "Unsupported swing mode requested");
+          break;
+        }
+      }
+
+      if(call.get_preset().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested preset change");
+
+        switch(*call.get_preset())
+        {
+          case climate::CLIMATE_PRESET_NONE:
+            this->data[5] = (this->data[5] & 0xF0); // Clear right nib for normal mode
+          break;
+          case climate::CLIMATE_PRESET_BOOST:
+            this->data[5] = (this->data[5] & 0xF0) + 0x02; // Clear right nib and set powerful mode
+          break;
+          case climate::CLIMATE_PRESET_ECO:
+            this->data[5] = (this->data[5] & 0xF0) + 0x04; // Clear right nib and set quiet mode
+          break;
+          default:
+            ESP_LOGV(ESPPAC::TAG, "Unsupported swing mode requested");
+          break;
+        }
+      }
+
+      send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+      set_data(false);
+    }
+
+    /*
+     * Set the data array to the fields
+     */
+    void PanasonicACCNT::set_data(bool set)
+    {
+      climate::ClimateMode mode = determine_mode(data[0]);
+      //std::string fanSpeed = determine_fan_speed(data[3]);
+      climate::ClimateFanMode fanSpeed = determine_fan_speed(data[3]);
+
+      const char* verticalSwing = determine_vertical_swing(data[4]);
+      const char* horizontalSwing = determine_horizontal_swing(data[4]);
+
+      climate::ClimatePreset preset = determine_preset(data[5]);
+      bool nanoex = determine_preset_nanoex(data[5]);
+      bool mildDry = determine_mild_dry(data[2]);
+
+      this->mode = mode;
+      this->action = determine_action();
+
+      //this->custom_fan_mode = fanSpeed;
+      this->fan_mode = fanSpeed;
+
+      this->update_target_temperature((int8_t)data[1]);
+
+      if(set) // Also set current and outside temperature
+      {
+        this->update_current_temperature((int8_t)receiveBuffer[18]);
+        this->update_outside_temperature((int8_t)receiveBuffer[19]);
+      }
+
+      if(strcmp(verticalSwing, "auto") == 0 && strcmp(horizontalSwing, "auto") == 0)
+        this->swing_mode = climate::CLIMATE_SWING_BOTH;
+      else if(strcmp(verticalSwing, "auto") == 0)
+        this->swing_mode = climate::CLIMATE_SWING_VERTICAL;
+      else if(strcmp(horizontalSwing, "auto") == 0)
+        this->swing_mode = climate::CLIMATE_SWING_HORIZONTAL;
+      else
+        this->swing_mode = climate::CLIMATE_SWING_OFF;
+
+      this->update_swing_vertical(verticalSwing);
+      this->update_swing_horizontal(horizontalSwing);
+
+      this->preset = preset;
+
+      this->update_nanoex(nanoex);
+      //this->update_mild_dry(mildDry); // TODO: Implement mild dry
+
+      //this->publish_state();
     }
 
     /*
@@ -157,42 +324,11 @@ namespace ESPPAC
       {
         memcpy(data, &receiveBuffer[2], 10); // Copy 10 data bytes from query response to data
 
-        climate::ClimateMode mode = determine_mode(receiveBuffer[2]);
-        std::string fanSpeed = determine_fan_speed(receiveBuffer[5]);
-
-        const char* verticalSwing = determine_vertical_swing(receiveBuffer[6]);
-        const char* horizontalSwing = determine_horizontal_swing(receiveBuffer[6]);
-
-        climate::ClimatePreset preset = determine_preset(receiveBuffer[7]);
-        bool nanoex = determine_preset_nanoex(receiveBuffer[7]);
-        bool mildDry = determine_mild_dry(receiveBuffer[4]);
-
-        this->mode = mode;
-        this->action = determine_action();
-        this->custom_fan_mode = fanSpeed;
-
-        this->update_target_temperature((int8_t)receiveBuffer[3]);
-        this->update_current_temperature((int8_t)receiveBuffer[18]);
-        this->update_outside_temperature((int8_t)receiveBuffer[19]);
-
-        if(strcmp(verticalSwing, "auto") == 0 && strcmp(horizontalSwing, "auto") == 0)
-          this->swing_mode = climate::CLIMATE_SWING_BOTH;
-        else if(strcmp(verticalSwing, "auto") == 0)
-          this->swing_mode = climate::CLIMATE_SWING_VERTICAL;
-        else if(strcmp(horizontalSwing, "auto") == 0)
-          this->swing_mode = climate::CLIMATE_SWING_HORIZONTAL;
-        else
-          this->swing_mode = climate::CLIMATE_SWING_OFF;
-
-        this->update_swing_vertical(verticalSwing);
-        this->update_swing_horizontal(horizontalSwing);
-
-        this->preset = preset;
-
-        this->update_nanoex(nanoex);
-        //this->update_mild_dry(mildDry); // TODO: Implement mild dry
-
+        this->set_data(true);
         this->publish_state();
+
+        if(this->state != ACState::Ready)
+          this->state = ACState::Ready; // Mark as ready after first poll
       }
       else
       {
@@ -202,45 +338,57 @@ namespace ESPPAC
 
     climate::ClimateMode PanasonicACCNT::determine_mode(byte mode)
     {
-      switch(mode)
+      byte nib1 = (mode >> 4) & 0x0F; // Left nib for mode
+      byte nib2 = (mode >> 0) & 0x0F; // Right nib for power state
+
+      if(nib2 == 0x00)
+        return climate::CLIMATE_MODE_OFF;
+
+      switch(nib1)
       {
-        case 0x04: // Auto
+        case 0x00: // Auto
           return climate::CLIMATE_MODE_HEAT_COOL;
-        case 0x34: // Cool
+        case 0x03: // Cool
           return climate::CLIMATE_MODE_COOL;
-        case 0x44: // Heat
+        case 0x04: // Heat
           return climate::CLIMATE_MODE_HEAT;
-        case 0x24: // Dry
+        case 0x02: // Dry
           return climate::CLIMATE_MODE_DRY;
-        case 0x64: // Fan only
+        case 0x06: // Fan only
           return climate::CLIMATE_MODE_FAN_ONLY;
-        case 0x30: // Off
-          return climate::CLIMATE_MODE_OFF;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown climate mode");
           return climate::CLIMATE_MODE_OFF;
       }
     }
 
-    std::string PanasonicACCNT::determine_fan_speed(byte speed)
+    //std::string PanasonicACCNT::determine_fan_speed(byte speed)
+    climate::ClimateFanMode PanasonicACCNT::determine_fan_speed(byte speed)
     {
       switch(speed)
       {
         case 0xA0: // Auto
-          return "auto";
+          //return "auto";
+          return climate::CLIMATE_FAN_AUTO;
         case 0x30: // 1
-          return "lowest";
+          //return "1";
+          return climate::CLIMATE_FAN_LOW;
         case 0x40: // 2
-          return "low";
+          //return "2";
+          return climate::CLIMATE_FAN_MEDIUM;
         case 0x50: // 3
-          return "medium";
+          //return "3";
+          return climate::CLIMATE_FAN_MIDDLE;
         case 0x60: // 4
-          return "high";
+          //return "4";
+          return climate::CLIMATE_FAN_HIGH;
         case 0x70: // 5
-          return "highest";
+          //return "5";
+          return climate::CLIMATE_FAN_FOCUS;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown fan speed");
-          return "unknown";
+          //return "unknown";
+          return climate::CLIMATE_FAN_OFF;
       }
     }
 
