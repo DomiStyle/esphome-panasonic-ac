@@ -59,7 +59,7 @@ This hardware installation guide assumes you already have a Panasonic DNSK-P11 i
 
 | **ESP32** | **Logic Converter**           | **AC connector** | **Notes** |
 | --------- | ------------- | ---------------- | ----------- |
-| -        | VCC/HV | 5V | Provides the ESP32 with power from the AC, make sure to connect it to the high voltage side if your logic converter has one |
+| 5V/VIN    | VCC/HV | 5V | Provides the ESP32 with power from the AC, make sure to connect it to the high voltage side if your logic converter has one |
 | 3.3V      | VCC/LV | - | Connect the logic converter to 3.3V on the LV side |
 | GND       | GND    | GND | Connect any ground from the ESP32 to the ground of the logic converter low voltage side |
 | GPIO16    | LV1    | - | Connect GPIO16 to the first of your logic converter channels (Low voltage) |
