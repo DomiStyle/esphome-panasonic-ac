@@ -9,16 +9,8 @@ namespace ESPPAC
   static const char* VERSION = "2.0.0";
   static const char* TAG = "esppac";
 
-  static const byte HEADER = 0x5A; // The header of the protocol, every packet starts with this
   static const int BUFFER_SIZE = 128; // The maximum size of a single packet (both receive and transmit)
-
-  static const int INIT_TIMEOUT = 10000; // Time to wait before initializing after boot
-  static const int INIT_END_TIMEOUT = 10000; // Time to wait for last handshake packet
-  static const int FIRST_POLL_TIMEOUT = 650; // Time to wait before requesting the first poll
   static const int READ_TIMEOUT = 20; // The maximum time to wait before considering a packet complete
-  static const int RESPONSE_TIMEOUT = 600; // The timeout after which we expect a response to our last command
-  static const int INIT_FAIL_TIMEOUT = 30000; // The timeout after which the initialization is considered failed
-  static const int POLL_INTERVAL = 55000; // The interval at which to poll the AC
 
   static const uint8_t MIN_TEMPERATURE = 16; // Minimum temperature as reported by Panasonic app
   static const uint8_t MAX_TEMPERATURE = 30; // Maximum temperature as supported by Panasonic app
@@ -77,15 +69,14 @@ namespace ESPPAC
 
       void read_data();
 
-      const char* get_swing_vertical(byte swing, ACType type);
-      const char* get_swing_horizontal(byte swing, ACType type);
-
       void update_outside_temperature(int8_t temperature);
       void update_current_temperature(int8_t temperature);
       void update_target_temperature(int8_t temperature);
-      void update_swing_horizontal(byte swing);
-      void update_swing_vertical(byte swing);
-      void update_nanoex(byte nanoex);
+      void update_swing_horizontal(const char* swing);
+      void update_swing_vertical(const char* swing);
+      void update_nanoex(bool nanoex);
+
+      climate::ClimateAction determine_action();
 
       void log_packet(byte array[], size_t length, bool outgoing = false);
   };

@@ -7,6 +7,15 @@ namespace ESPPAC
   {
     static const ACType TYPE = ACType::DNSKP11;
 
+    static const byte HEADER = 0x5A; // The header of the protocol, every packet starts with this
+
+    static const int INIT_TIMEOUT = 10000; // Time to wait before initializing after boot
+    static const int INIT_END_TIMEOUT = 10000; // Time to wait for last handshake packet
+    static const int FIRST_POLL_TIMEOUT = 650; // Time to wait before requesting the first poll
+    static const int POLL_INTERVAL = 55000; // The interval at which to poll the AC
+    static const int RESPONSE_TIMEOUT = 600; // The timeout after which we expect a response to our last command
+    static const int INIT_FAIL_TIMEOUT = 30000; // The timeout after which the initialization is considered failed
+
     enum class ACState
     {
       Initializing, // Before first handshake packet is sent
@@ -57,8 +66,10 @@ namespace ESPPAC
         void determine_mode(byte mode);
         void determine_fan_speed(byte speed);
         void determine_fan_power(byte power);
+        const char* determine_swing_vertical(byte swing);
+        const char* determine_swing_horizontal(byte swing);
         void determine_swing(byte swing);
-        void determine_action();
+        bool determine_nanoex(byte nanoex);
 
         void handle_resend();
 

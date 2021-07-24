@@ -10,6 +10,8 @@ namespace ESPPAC
     void PanasonicACWLAN::setup()
     {
       PanasonicAC::setup();
+
+      ESP_LOGD(ESPPAC::TAG, "Using DNSK-P11 protocol via CN-WLAN");
     }
 
     void PanasonicACWLAN::loop()
@@ -18,7 +20,7 @@ namespace ESPPAC
       {
         handle_init_packets(); // Handle initialization packets separate from normal packets
 
-        if(millis() - initTime > ESPPAC::INIT_FAIL_TIMEOUT)
+        if(millis() - initTime > ESPPAC::WLAN::INIT_FAIL_TIMEOUT)
         {
           state = ACState::Failed;
           mark_failed();
@@ -193,7 +195,7 @@ namespace ESPPAC
 
     void PanasonicACWLAN::handle_poll()
     {
-      if(state == ACState::Ready && millis() - lastPacketSent > ESPPAC::POLL_INTERVAL)
+      if(state == ACState::Ready && millis() - lastPacketSent > ESPPAC::WLAN::POLL_INTERVAL)
       {
         ESP_LOGV(ESPPAC::TAG, "Polling AC");
         send_command(ESPPAC::WLAN::CMD_POLL, sizeof(ESPPAC::WLAN::CMD_POLL));
@@ -204,7 +206,7 @@ namespace ESPPAC
     {
       if(state == ACState::Initializing)
       {
-        if(millis() - initTime > ESPPAC::INIT_TIMEOUT) // Handle handshake initialization
+        if(millis() - initTime > ESPPAC::WLAN::INIT_TIMEOUT) // Handle handshake initialization
         {
           ESP_LOGD(ESPPAC::TAG, "Starting handshake [1/16]");
           send_command(ESPPAC::WLAN::CMD_HANDSHAKE_1, sizeof(ESPPAC::WLAN::CMD_HANDSHAKE_1)); // Send first handshake packet, AC won't send a response
@@ -214,14 +216,14 @@ namespace ESPPAC
           state = ACState::Handshake; // Update state to handshake started
         }
       }
-      else if(state == ACState::FirstPoll && millis() - lastPacketSent > ESPPAC::FIRST_POLL_TIMEOUT) // Handle sending first poll
+      else if(state == ACState::FirstPoll && millis() - lastPacketSent > ESPPAC::WLAN::FIRST_POLL_TIMEOUT) // Handle sending first poll
       {
         ESP_LOGD(ESPPAC::TAG, "Polling for the first time");
         send_command(ESPPAC::WLAN::CMD_POLL, sizeof(ESPPAC::WLAN::CMD_POLL));
 
         state = ACState::HandshakeEnding;
       }
-      else if(state == ACState::HandshakeEnding && millis() - lastPacketSent > ESPPAC::INIT_END_TIMEOUT) // Handle last handshake message
+      else if(state == ACState::HandshakeEnding && millis() - lastPacketSent > ESPPAC::WLAN::INIT_END_TIMEOUT) // Handle last handshake message
       {
         ESP_LOGD(ESPPAC::TAG, "Finishing handshake [16/16]");
         send_command(ESPPAC::WLAN::CMD_HANDSHAKE_16, sizeof(ESPPAC::WLAN::CMD_HANDSHAKE_16));
@@ -242,12 +244,12 @@ namespace ESPPAC
       if(receiveBuffer[0] == 0x66) // Sync packets are the only packet not starting with 0x5A
       {
         ESP_LOGI(ESPPAC::TAG, "Received sync packet, triggering initialization");
-        initTime -= ESPPAC::INIT_TIMEOUT; // Set init time back to trigger a initialization now
+        initTime -= ESPPAC::WLAN::INIT_TIMEOUT; // Set init time back to trigger a initialization now
         receiveBufferIndex = 0; // Reset buffer
         return false;
       }
 
-      if(receiveBuffer[0] != ESPPAC::HEADER) // Check if header matches
+      if(receiveBuffer[0] != ESPPAC::WLAN::HEADER) // Check if header matches
       {
         ESP_LOGW(ESPPAC::TAG, "Dropping invalid packet (header)");
         receiveBufferIndex = 0; // Reset buffer
@@ -363,6 +365,58 @@ namespace ESPPAC
       }
     }
 
+    const char* PanasonicACWLAN::determine_swing_vertical(byte swing)
+    {
+      switch(swing)
+      {
+        case 0x42: // Down
+          return "down";
+        break;
+        case 0x45: // Down center
+          return "down_center";
+        break;
+        case 0x43: // Center
+          return "center";
+        break;
+        case 0x44: // Up Center
+          return "up_center";
+        break;
+        case 0x41: // Up
+          return "up";
+        break;
+        default:
+          ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing position");
+          return "unknown";
+        break;
+      }
+    }
+
+    const char* PanasonicACWLAN::determine_swing_horizontal(byte swing)
+    {
+      switch(swing)
+      {
+        case 0x42: // Left
+          return "left";
+        break;
+        case 0x5C: // Left center
+          return "left_center";
+        break;
+        case 0x43: // Center
+          return "center";
+        break;
+        case 0x56: // Right center
+          return "right_center";
+        break;
+        case 0x41: // Right
+          return "right";
+        break;
+        default:
+          ESP_LOGW(ESPPAC::TAG, "Received unknown horizontal swing position");
+          return "unknown";
+        break;
+      }
+    }
+
     void PanasonicACWLAN::determine_swing(byte swing)
     {
       switch(swing)
@@ -385,31 +439,14 @@ namespace ESPPAC
       }
     }
 
-    void PanasonicACWLAN::determine_action()
+    bool PanasonicACWLAN::determine_nanoex(byte nanoex)
     {
-      if(this->mode == climate::CLIMATE_MODE_OFF)
+      switch(nanoex)
       {
-        this->action = climate::CLIMATE_ACTION_OFF;
-      }
-      else if(this->mode == climate::CLIMATE_MODE_FAN_ONLY)
-      {
-        this->action = climate::CLIMATE_ACTION_FAN;
-      }
-      else if(this->mode == climate::CLIMATE_MODE_DRY)
-      {
-        this->action = climate::CLIMATE_ACTION_DRYING;
-      }
-      else if((this->mode == climate::CLIMATE_MODE_COOL || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature + ESPPAC::TEMPERATURE_TOLERANCE >= this->target_temperature)
-      {
-        this->action = climate::CLIMATE_ACTION_COOLING;
-      }
-      else if((this->mode == climate::CLIMATE_MODE_HEAT || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature - ESPPAC::TEMPERATURE_TOLERANCE <= this->target_temperature)
-      {
-        this->action = climate::CLIMATE_ACTION_HEATING;
-      }
-      else
-      {
-        this->action = climate::CLIMATE_ACTION_IDLE;
+        case 0x42:
+          return false;
+        default:
+          return true;
       }
     }
 
@@ -445,18 +482,23 @@ namespace ESPPAC
         update_current_temperature((int8_t)receiveBuffer[62]);
         update_outside_temperature((int8_t)receiveBuffer[66]); // Set current (outside) temperature
 
-        update_swing_horizontal(receiveBuffer[34]);
+        const char* horizontalSwing = determine_swing_horizontal(receiveBuffer[34]);
+        const char* verticalSwing = determine_swing_vertical(receiveBuffer[38]);
 
-        update_swing_vertical(receiveBuffer[38]);
+        update_swing_horizontal(horizontalSwing);
+        update_swing_vertical(verticalSwing);
 
-        update_nanoex(receiveBuffer[50]);
+        bool nanoex = determine_nanoex(receiveBuffer[50]);
+
+        update_nanoex(nanoex);
 
         determine_fan_speed(receiveBuffer[26]);
         determine_fan_power(receiveBuffer[42]); // Fan power can overwrite fan speed
 
         determine_swing(receiveBuffer[30]);
 
-        determine_action(); // Determine the current action of the AC
+        climate::ClimateAction action = determine_action(); // Determine the current action of the AC
+        this->action = action;
 
         this->publish_state();
       }
@@ -527,17 +569,17 @@ namespace ESPPAC
             case 0xA5: // Horizontal swing position
               ESP_LOGV(ESPPAC::TAG, "Received horizontal swing position");
 
-              update_swing_horizontal(receiveBuffer[currentIndex + 2]);
+              update_swing_horizontal(determine_swing_horizontal(receiveBuffer[currentIndex + 2]));
             break;
             case 0xA4: // Vertical swing position
               ESP_LOGV(ESPPAC::TAG, "Received vertical swing position");
 
-              update_swing_vertical(receiveBuffer[currentIndex + 2]);
+              update_swing_vertical(determine_swing_vertical(receiveBuffer[currentIndex + 2]));
             break;
             case 0x33: // nanoex mode
               ESP_LOGV(ESPPAC::TAG, "Received nanoex state");
 
-              update_nanoex(receiveBuffer[currentIndex + 2]);
+              update_nanoex(determine_nanoex(receiveBuffer[currentIndex + 2]));
             break;
             case 0x20:
               ESP_LOGV(ESPPAC::TAG, "Received unknown nanoex field");
@@ -549,7 +591,8 @@ namespace ESPPAC
           }
         }
 
-        determine_action(); // Determine the current action of the AC
+        climate::ClimateAction action = determine_action(); // Determine the current action of the AC
+        this->action = action;
 
         this->publish_state();
       }
@@ -699,8 +742,8 @@ namespace ESPPAC
 
     void PanasonicACWLAN::send_packet(byte* packet, size_t packetLength, CommandType type)
     {
-      byte checksum = ESPPAC::HEADER; // Checksum is calculated by adding all bytes together
-      packet[0] = ESPPAC::HEADER; // Write header to packet
+      byte checksum = ESPPAC::WLAN::HEADER; // Checksum is calculated by adding all bytes together
+      packet[0] = ESPPAC::WLAN::HEADER; // Write header to packet
 
       byte packetCount = transmitPacketCount; // Set packet counter
 
@@ -749,7 +792,7 @@ namespace ESPPAC
     */
     void PanasonicACWLAN::handle_resend()
     {
-      if(waitingForResponse && millis() - lastPacketSent > ESPPAC::RESPONSE_TIMEOUT && receiveBufferIndex == 0) // Check if AC failed to respond in time and resend packet, if nothing was received yet
+      if(waitingForResponse && millis() - lastPacketSent > ESPPAC::WLAN::RESPONSE_TIMEOUT && receiveBufferIndex == 0) // Check if AC failed to respond in time and resend packet, if nothing was received yet
       {
         ESP_LOGD(ESPPAC::TAG, "Resending previous packet");
         send_command(lastCommand, lastCommandLength, CommandType::Resend);

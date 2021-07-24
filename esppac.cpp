@@ -34,6 +34,7 @@ namespace ESPPAC
         climate::CLIMATE_MODE_DRY
       });
 
+/*
       traits.set_supported_fan_modes(
       {
         climate::CLIMATE_FAN_AUTO,
@@ -43,6 +44,18 @@ namespace ESPPAC
         climate::CLIMATE_FAN_MIDDLE,
         climate::CLIMATE_FAN_FOCUS
       });
+*/
+
+      traits.set_supported_custom_fan_modes(
+      {
+        "auto",
+        "lowest",
+        "low",
+        "medium",
+        "high",
+        "highest"
+      });
+
 
       traits.set_supported_swing_modes(
       {
@@ -96,70 +109,6 @@ namespace ESPPAC
       }
     }
 
-    const char* PanasonicAC::get_swing_vertical(byte swing, ACType type = ACType::DNSKP11)
-    {
-      if(type == ACType::DNSKP11)
-      {
-        switch(swing)
-        {
-          case 0x42: // Down
-            return "down";
-          break;
-          case 0x45: // Down center
-            return "down_center";
-          break;
-          case 0x43: // Center
-            return "center";
-          break;
-          case 0x44: // Up Center
-            return "up_center";
-          break;
-          case 0x41: // Up
-            return "up";
-          break;
-          default:
-            ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing position");
-            return "unknown";
-          break;
-        }
-      }
-
-      ESP_LOGE(ESPPAC::TAG, "Received unknown AC type for vertical swing");
-      return "unknown";
-    }
-
-    const char* PanasonicAC::get_swing_horizontal(byte swing, ACType type = ACType::DNSKP11)
-    {
-      if(type == ACType::DNSKP11)
-      {
-        switch(swing)
-        {
-          case 0x42: // Left
-            return "left";
-          break;
-          case 0x5C: // Left center
-            return "left_center";
-          break;
-          case 0x43: // Center
-            return "center";
-          break;
-          case 0x56: // Right center
-            return "right_center";
-          break;
-          case 0x41: // Right
-            return "right";
-          break;
-          default:
-            ESP_LOGW(ESPPAC::TAG, "Received unknown horizontal swing position");
-            return "unknown";
-          break;
-        }
-      }
-
-      ESP_LOGE(ESPPAC::TAG, "Received unknown AC type for horizontal swing");
-      return "unknown";
-    }
-
     void PanasonicAC::update_outside_temperature(int8_t temperature)
     {
       if(temperature > ESPPAC::TEMPERATURE_THRESHOLD)
@@ -196,9 +145,9 @@ namespace ESPPAC
       this->target_temperature = temperature;
     }
 
-    void PanasonicAC::update_swing_horizontal(byte swing)
+    void PanasonicAC::update_swing_horizontal(const char* swing)
     {
-      this->horizontal_swing_state = get_swing_horizontal(swing);
+      this->horizontal_swing_state = swing;
 
       if(this->horizontal_swing_sensor != NULL && this->horizontal_swing_sensor->state != this->horizontal_swing_state)
       {
@@ -206,21 +155,49 @@ namespace ESPPAC
       }
     }
 
-    void PanasonicAC::update_swing_vertical(byte swing)
+    void PanasonicAC::update_swing_vertical(const char* swing)
     {
-      this->vertical_swing_state = get_swing_vertical(swing);
+      this->vertical_swing_state = swing;
 
       if(this->vertical_swing_sensor != NULL && this->vertical_swing_sensor->state != this->vertical_swing_state)
         this->vertical_swing_sensor->publish_state(this->vertical_swing_state); // Set current vertical swing position
     }
 
-    void PanasonicAC::update_nanoex(byte nanoex)
+    void PanasonicAC::update_nanoex(bool nanoex)
     {
       if(this->nanoex_switch != NULL)
-        {
-          this->nanoex_state = nanoex != 0x42;
-          this->nanoex_switch->publish_state(this->nanoex_state);
-        }
+      {
+        this->nanoex_state = nanoex;
+        this->nanoex_switch->publish_state(this->nanoex_state);
+      }
+    }
+
+    climate::ClimateAction PanasonicAC::determine_action()
+    {
+      if(this->mode == climate::CLIMATE_MODE_OFF)
+      {
+        return climate::CLIMATE_ACTION_OFF;
+      }
+      else if(this->mode == climate::CLIMATE_MODE_FAN_ONLY)
+      {
+        return climate::CLIMATE_ACTION_FAN;
+      }
+      else if(this->mode == climate::CLIMATE_MODE_DRY)
+      {
+        return climate::CLIMATE_ACTION_DRYING;
+      }
+      else if((this->mode == climate::CLIMATE_MODE_COOL || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature + ESPPAC::TEMPERATURE_TOLERANCE >= this->target_temperature)
+      {
+        return climate::CLIMATE_ACTION_COOLING;
+      }
+      else if((this->mode == climate::CLIMATE_MODE_HEAT || this->mode == climate::CLIMATE_MODE_HEAT_COOL) && this->current_temperature - ESPPAC::TEMPERATURE_TOLERANCE <= this->target_temperature)
+      {
+        return climate::CLIMATE_ACTION_HEATING;
+      }
+      else
+      {
+        return climate::CLIMATE_ACTION_IDLE;
+      }
     }
 
     /*
