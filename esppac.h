@@ -71,7 +71,7 @@ namespace ESPPAC
 
       void update_outside_temperature(int8_t temperature);
       void update_current_temperature(int8_t temperature);
-      void update_target_temperature(int8_t temperature);
+      void update_target_temperature(float temperature);
       void update_swing_horizontal(const char* swing);
       void update_swing_vertical(const char* swing);
       void update_nanoex(bool nanoex);

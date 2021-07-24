@@ -34,7 +34,6 @@ namespace ESPPAC
         climate::CLIMATE_MODE_DRY
       });
 
-/*
       traits.set_supported_fan_modes(
       {
         climate::CLIMATE_FAN_AUTO,
@@ -44,18 +43,17 @@ namespace ESPPAC
         climate::CLIMATE_FAN_MIDDLE,
         climate::CLIMATE_FAN_FOCUS
       });
-*/
 
+/*
       traits.set_supported_custom_fan_modes(
       {
-        "auto",
-        "lowest",
-        "low",
-        "medium",
-        "high",
-        "highest"
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
       });
-
+*/
 
       traits.set_supported_swing_modes(
       {
@@ -67,6 +65,7 @@ namespace ESPPAC
 
       traits.set_supported_presets(
       {
+        climate::CLIMATE_PRESET_NONE, // No preset active
         climate::CLIMATE_PRESET_BOOST, // Powerful
         climate::CLIMATE_PRESET_ECO // Quiet
       });
@@ -132,7 +131,7 @@ namespace ESPPAC
       this->current_temperature = temperature;
     }
 
-    void PanasonicAC::update_target_temperature(int8_t temperature)
+    void PanasonicAC::update_target_temperature(float temperature)
     {
       temperature = temperature * ESPPAC::TEMPERATURE_STEP;
 
