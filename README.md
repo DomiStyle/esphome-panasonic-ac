@@ -38,6 +38,13 @@ Tested on ESP32, should work on ESP8266 but ESP32 is preferred for the multiple 
 This software installation guide assumes some familiarity with ESPHome.
 
 * Pull this repository
+* Copy the ac.yaml one directory above so your directory structure looks like this:
+```
+ac.yaml
+esphome-panasonic-ac/
+  esppac.cpp
+  ...
+```
 * Adjust the ac.yaml to your needs
 * Connect your ESP
 * Run `esphome ac.yaml run` and choose your serial port (or do this via the Home Assistant UI)
