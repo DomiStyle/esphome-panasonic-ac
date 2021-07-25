@@ -77,7 +77,11 @@ switch:
 climate:
   - platform: custom
     lambda: |-
-      auto ac = new PanasonicAC(id(ac_uart));
+      // For DNSK-P11
+      // auto ac = new ESPPAC::WLAN::PanasonicACWLAN(id(ac_uart));
+
+      // For CZ-TACG1
+      // auto ac = new ESPPAC::CNT::PanasonicACCNT(id(ac_uart));
 
       ac->set_outside_temperature_sensor(id(ac01_outside_temperature));
       ac->set_vertical_swing_sensor(id(ac01_vertical_swing));
