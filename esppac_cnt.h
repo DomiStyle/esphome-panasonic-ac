@@ -25,6 +25,12 @@ namespace ESPPAC
 
         void control(const climate::ClimateCall &call) override;
 
+        //void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor) override;
+        //void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor) override;
+        void set_nanoex_switch(switch_::Switch *nanoex_switch) override;
+        void set_eco_switch(switch_::Switch *eco_switch) override;
+        void set_mild_dry_switch(switch_::Switch *mild_dry_switch) override;
+
         void setup() override;
         void loop() override;
 

@@ -525,5 +525,92 @@ namespace ESPPAC
         return false;
       }
     }
+
+    void PanasonicACCNT::set_nanoex_switch(switch_::Switch *nanoex_switch)
+    {
+      PanasonicAC::set_nanoex_switch(nanoex_switch);
+
+      this->nanoex_switch->add_on_state_callback([this](bool value)
+      {
+        if(this->state != ACState::Ready)
+          return;
+
+        if(value != this->nanoex_state) // Ignore if already the correct state
+        {
+          this->nanoex_state = value;
+
+          if(value)
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning nanoex on");
+            this->data[5] = (this->data[5] & 0x0F) + 0x40;
+          }
+          else
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning nanoex off");
+            this->data[5] = (this->data[5] & 0x0F);
+          }
+
+          send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+        }
+      });
+    }
+
+    void PanasonicACCNT::set_eco_switch(switch_::Switch *eco_switch)
+    {
+      PanasonicAC::set_eco_switch(eco_switch);
+
+      this->eco_switch->add_on_state_callback([this](bool value)
+      {
+        if(this->state != ACState::Ready)
+          return;
+
+        if(value != this->eco_state) // Ignore if already the correct state
+        {
+          this->eco_state = value;
+
+          if(value)
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning eco mode on");
+            this->data[6] = 0x40;
+          }
+          else
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning eco mode off");
+            this->data[6] = 0x00;
+          }
+
+          send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+        }
+      });
+    }
+
+    void PanasonicACCNT::set_mild_dry_switch(switch_::Switch *mild_dry_switch)
+    {
+      PanasonicAC::set_mild_dry_switch(mild_dry_switch);
+
+      this->mild_dry_switch->add_on_state_callback([this](bool value)
+      {
+        if(this->state != ACState::Ready)
+          return;
+
+        if(value != this->mild_dry_state) // Ignore if already the correct state
+        {
+          this->mild_dry_state = value;
+
+          if(value)
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning mild dry on");
+            this->data[2] = 0x7F;
+          }
+          else
+          {
+            ESP_LOGV(ESPPAC::TAG, "Turning mild dry off");
+            this->data[2] = 0x80;
+          }
+
+          send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+        }
+      });
+    }
   }
 }
