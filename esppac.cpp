@@ -47,6 +47,7 @@ namespace ESPPAC
 /*
       traits.set_supported_custom_fan_modes(
       {
+        "Auto",
         "1",
         "2",
         "3",
@@ -63,11 +64,20 @@ namespace ESPPAC
         climate::CLIMATE_SWING_HORIZONTAL
       });
 
+/*
       traits.set_supported_presets(
       {
         climate::CLIMATE_PRESET_NONE, // No preset active
         climate::CLIMATE_PRESET_BOOST, // Powerful
         climate::CLIMATE_PRESET_ECO // Quiet
+      });
+*/
+
+      traits.set_supported_custom_presets(
+      {
+        "None",
+        "Powerful",
+        "Quiet"
       });
 
       return traits;
@@ -171,6 +181,24 @@ namespace ESPPAC
       }
     }
 
+    void PanasonicAC::update_eco(bool eco)
+    {
+      if(this->eco_switch != NULL)
+      {
+        this->eco_state = eco;
+        this->eco_switch->publish_state(this->eco_state);
+      }
+    }
+
+    void PanasonicAC::update_mild_dry(bool mild_dry)
+    {
+      if(this->mild_dry_switch != NULL)
+      {
+        this->mild_dry_state = mild_dry;
+        this->mild_dry_switch->publish_state(this->mild_dry_state);
+      }
+    }
+
     climate::ClimateAction PanasonicAC::determine_action()
     {
       if(this->mode == climate::CLIMATE_MODE_OFF)
@@ -221,6 +249,16 @@ namespace ESPPAC
     void PanasonicAC::set_nanoex_switch(switch_::Switch *nanoex_switch)
     {
       this->nanoex_switch = nanoex_switch;
+    }
+
+    void PanasonicAC::set_eco_switch(switch_::Switch *eco_switch)
+    {
+      this->eco_switch = eco_switch;
+    }
+
+    void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch)
+    {
+      this->mild_dry_switch = mild_dry_switch;
     }
 
     /*

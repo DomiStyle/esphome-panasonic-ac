@@ -72,6 +72,14 @@ switch:
     id: ac01_nanoex_switch
     name: ac01_nanoex_switch
     optimistic: true
+  - platform: template
+    id: ac01_eco_switch
+    name: ac01_eco_switch
+    optimistic: true
+  - platform: template
+    id: ac01_mild_dry_switch
+    name: ac01_mild_dry_switch
+    optimistic: true
 
 # Main climate component, switches and sensors are set in the lambda; remove if not wanted
 climate:
@@ -86,7 +94,11 @@ climate:
       ac->set_outside_temperature_sensor(id(ac01_outside_temperature));
       ac->set_vertical_swing_sensor(id(ac01_vertical_swing));
       ac->set_horizontal_swing_sensor(id(ac01_horizontal_swing));
-      ac->set_nanoex_switch(id(ac01_nanoex_switch));
+
+      // Enable as needed
+      // ac->set_nanoex_switch(id(ac01_nanoex_switch));
+      // ac->set_eco_switch(id(ac01_eco_switch));
+      // ac->set_mild_dry_switch(id(ac01_mild_dry_switch));
 
       App.register_component(ac);
       return {ac};

@@ -49,8 +49,9 @@ namespace ESPPAC
         const char* determine_vertical_swing(byte swing);
         const char* determine_horizontal_swing(byte swing);
 
-        climate::ClimatePreset determine_preset(byte preset);
+        std::string determine_preset(byte preset);
         bool determine_preset_nanoex(byte preset);
+        bool determine_eco(byte value);
         bool determine_mild_dry(byte value);
     };
   }

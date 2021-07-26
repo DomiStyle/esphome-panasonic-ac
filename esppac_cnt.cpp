@@ -137,6 +137,7 @@ namespace ESPPAC
         }
       }
 
+/*
       if(call.get_preset().has_value())
       {
         ESP_LOGV(ESPPAC::TAG, "Requested preset change");
@@ -153,9 +154,26 @@ namespace ESPPAC
             this->data[5] = (this->data[5] & 0xF0) + 0x04; // Clear right nib and set quiet mode
           break;
           default:
-            ESP_LOGV(ESPPAC::TAG, "Unsupported swing mode requested");
+            ESP_LOGV(ESPPAC::TAG, "Unsupported preset requested");
           break;
         }
+      }
+*/
+
+      if(call.get_custom_preset().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested preset change");
+
+        std::string preset = *call.get_custom_preset();
+
+        if(preset.compare("None") == 0)
+          this->data[5] = (this->data[5] & 0xF0); // Clear right nib for normal mode
+        else if(preset.compare("Powerful") == 0)
+          this->data[5] = (this->data[5] & 0xF0) + 0x02; // Clear right nib and set powerful mode
+        else if(preset.compare("Quiet") == 0)
+          this->data[5] = (this->data[5] & 0xF0) + 0x04; // Clear right nib and set quiet mode
+        else
+          ESP_LOGV(ESPPAC::TAG, "Unsupported preset requested");
       }
 
       send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
@@ -174,8 +192,9 @@ namespace ESPPAC
       const char* verticalSwing = determine_vertical_swing(data[4]);
       const char* horizontalSwing = determine_horizontal_swing(data[4]);
 
-      climate::ClimatePreset preset = determine_preset(data[5]);
+      std::string preset = determine_preset(data[5]);
       bool nanoex = determine_preset_nanoex(data[5]);
+      bool eco = determine_eco(data[6]);
       bool mildDry = determine_mild_dry(data[2]);
 
       this->mode = mode;
@@ -204,12 +223,12 @@ namespace ESPPAC
       this->update_swing_vertical(verticalSwing);
       this->update_swing_horizontal(horizontalSwing);
 
-      this->preset = preset;
+      //this->preset = preset;
+      this->custom_preset = preset;
 
       this->update_nanoex(nanoex);
-      //this->update_mild_dry(mildDry); // TODO: Implement mild dry
-
-      //this->publish_state();
+      this->update_eco(eco);
+      this->update_mild_dry(mildDry);
     }
 
     /*
@@ -410,6 +429,8 @@ namespace ESPPAC
           return "down_center";
         case 0x05:
           return "down";
+        case 0x00:
+          return "unsupported";
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing mode");
           return "unknown";
@@ -434,27 +455,33 @@ namespace ESPPAC
           return "right_center";
         case 0x0C:
           return "right";
+        case 0x00:
+          return "unsupported";
         default:
-          ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing mode");
+          ESP_LOGW(ESPPAC::TAG, "Received unknown horizontal swing mode");
           return "unknown";
       }
     }
 
-    climate::ClimatePreset PanasonicACCNT::determine_preset(byte preset)
+    std::string PanasonicACCNT::determine_preset(byte preset)
     {
       byte nib = (preset >> 0) & 0x0F; // Right nib for preset (powerful/quiet)
 
       switch(nib)
       {
         case 0x02:
-          return climate::CLIMATE_PRESET_BOOST;
+          //return climate::CLIMATE_PRESET_BOOST;
+          return "Powerful";
         case 0x04:
-          return climate::CLIMATE_PRESET_ECO;
+          //return climate::CLIMATE_PRESET_ECO;
+          return "Quiet";
         case 0x00:
-          return climate::CLIMATE_PRESET_NONE;
+          //return climate::CLIMATE_PRESET_NONE;
+          return "None";
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown preset");
-          return climate::CLIMATE_PRESET_NONE;
+          //return climate::CLIMATE_PRESET_NONE;
+          return "None";
       }
     }
 
@@ -469,6 +496,19 @@ namespace ESPPAC
       else
       {
         ESP_LOGW(ESPPAC::TAG, "Received unknown nanoex value");
+        return false;
+      }
+    }
+
+    bool PanasonicACCNT::determine_eco(byte value)
+    {
+      if(value == 0x40)
+        return true;
+      else if(value == 0x00)
+        return false;
+      else
+      {
+        ESP_LOGW(ESPPAC::TAG, "Received unknown eco value");
         return false;
       }
     }

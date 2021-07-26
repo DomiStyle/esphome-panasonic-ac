@@ -42,6 +42,8 @@ namespace ESPPAC
       virtual void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor);
       virtual void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor);
       virtual void set_nanoex_switch(switch_::Switch *nanoex_switch);
+      virtual void set_eco_switch(switch_::Switch *eco_switch);
+      virtual void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
 
       void setup() override;
       void loop() override;
@@ -51,9 +53,13 @@ namespace ESPPAC
       text_sensor::TextSensor *vertical_swing_sensor = NULL; // Text sensor to store manual position of vertical swing
       text_sensor::TextSensor *horizontal_swing_sensor = NULL; // Text sensor to store manual position of horizontal swing
       switch_::Switch *nanoex_switch = NULL; // Switch to toggle nanoeX on/off
+      switch_::Switch *eco_switch = NULL; // Switch to toggle eco mode on/off
+      switch_::Switch *mild_dry_switch = NULL; // Switch to toggle mild dry mode on/off
       std::string vertical_swing_state;
       std::string horizontal_swing_state;
       bool nanoex_state = false; // Stores the state of nanoex to prevent duplicate packets
+      bool eco_state = false; // Stores the state of eco to prevent duplicate packets
+      bool mild_dry_state = false; // Stores the state of mild dry to prevent duplicate packets
 
       bool waitingForResponse = false; // Set to true if we are waiting for a response
 
@@ -75,6 +81,8 @@ namespace ESPPAC
       void update_swing_horizontal(const char* swing);
       void update_swing_vertical(const char* swing);
       void update_nanoex(bool nanoex);
+      void update_eco(bool eco);
+      void update_mild_dry(bool mild_dry);
 
       climate::ClimateAction determine_action();
 
