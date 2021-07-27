@@ -89,10 +89,6 @@ namespace ESPPAC
         initTime = millis();
         lastPacketSent = millis();
 
-        this->fan_mode = climate::CLIMATE_FAN_OFF;
-        this->swing_mode = climate::CLIMATE_SWING_OFF;
-        this->publish_state(); // Post dummy state so Home Assistant doesn't disconnect
-
         ESP_LOGI(ESPPAC::TAG, "Panasonic AC component v%s starting...", ESPPAC::VERSION);
     }
 
