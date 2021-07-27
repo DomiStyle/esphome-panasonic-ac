@@ -112,46 +112,44 @@ namespace ESPPAC
         set_value(0x31, *call.get_target_temperature() * 2);
       }
 
-      if(call.get_fan_mode().has_value())
+      if(call.get_custom_fan_mode().has_value())
       {
         ESP_LOGV(ESPPAC::TAG, "Requested fan mode change");
 
-        switch(*call.get_fan_mode())
+        std::string fanMode = *call.get_custom_fan_mode();
+
+        if(fanMode.compare("Auto") == 0)
         {
-          case climate::CLIMATE_FAN_LOW:
-            set_value(0xB2, 0x41);
-            set_value(0xA0, 0x32);
-          break;
-          case climate::CLIMATE_FAN_MEDIUM:
-            set_value(0xB2, 0x41);
-            set_value(0xA0, 0x33);
-          break;
-          case climate::CLIMATE_FAN_MIDDLE:
-            set_value(0xB2, 0x41);
-            set_value(0xA0, 0x34);
-          break;
-          case climate::CLIMATE_FAN_HIGH:
-            set_value(0xB2, 0x41);
-            set_value(0xA0, 0x36);
-          break;
-          case climate::CLIMATE_FAN_AUTO:
-            set_value(0xB2, 0x41);
-            set_value(0xA0, 0x41);
-          break;
-          case climate::CLIMATE_FAN_DIFFUSE:
-            set_value(0xB2, 0x43);
-            set_value(0x35, 0x42);
-            set_value(0x34, 0x42);
-          break;
-          case climate::CLIMATE_FAN_FOCUS:
-            set_value(0xB2, 0x42);
-            set_value(0x35, 0x42);
-            set_value(0x34, 0x42);
-          break;
-          default:
-            ESP_LOGV(ESPPAC::TAG, "Unsupported fan mode requested");
-          break;
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x41);
         }
+        else if(fanMode.compare("1") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x32);
+        }
+        else if(fanMode.compare("2") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x33);
+        }
+        else if(fanMode.compare("3") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x34);
+        }
+        else if(fanMode.compare("4") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x35);
+        }
+        else if(fanMode.compare("5") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0xA0, 0x36);
+        }
+        else
+          ESP_LOGV(ESPPAC::TAG, "Unsupported fan mode requested");
       }
 
       if(call.get_swing_mode().has_value())
@@ -181,6 +179,34 @@ namespace ESPPAC
             ESP_LOGV(ESPPAC::TAG, "Unsupported swing mode requested");
           break;
         }
+      }
+
+      if(call.get_custom_preset().has_value())
+      {
+        ESP_LOGV(ESPPAC::TAG, "Requested preset change");
+
+        std::string preset = *call.get_custom_preset();
+
+        if(preset.compare("Normal") == 0)
+        {
+          set_value(0xB2, 0x41);
+          set_value(0x35, 0x42);
+          set_value(0x34, 0x42);
+        }
+        else if(preset.compare("Powerful") == 0)
+        {
+          set_value(0xB2, 0x42);
+          set_value(0x35, 0x42);
+          set_value(0x34, 0x42);
+        }
+        else if(preset.compare("Quiet") == 0)
+        {
+          set_value(0xB2, 0x43);
+          set_value(0x35, 0x42);
+          set_value(0x34, 0x42);
+        }
+        else
+          ESP_LOGV(ESPPAC::TAG, "Unsupported preset requested");
       }
 
       if(setQueueIndex > 0) // Only send packet if any changes need to be made
@@ -320,47 +346,50 @@ namespace ESPPAC
       }
     }
 
-    void PanasonicACWLAN::determine_fan_speed(byte speed)
+    std::string PanasonicACWLAN::determine_fan_speed(byte speed)
     {
       switch(speed)
       {
         case 0x32: // 1
-          this->fan_mode = climate::CLIMATE_FAN_LOW;
+          return "1";
         break;
         case 0x33: // 2
-          this->fan_mode = climate::CLIMATE_FAN_MEDIUM;
+          return "2";
         break;
         case 0x34: // 3
-          this->fan_mode = climate::CLIMATE_FAN_MIDDLE;
+          return "3";
         break;
         case 0x35: // 4
+          return "4";
         case 0x36: // 5
-          this->fan_mode = climate::CLIMATE_FAN_HIGH; // Take 4 & 5 together for high since ESPHome doesn't have that many
+          return "5";
         break;
         case 0x41: // Auto
-          this->fan_mode = climate::CLIMATE_FAN_AUTO;
+          return "Auto";
         break;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown fan speed");
+          return "Unknown";
         break;
       }
     }
 
-    void PanasonicACWLAN::determine_fan_power(byte power)
+    std::string PanasonicACWLAN::determine_preset(byte preset)
     {
-      switch(power)
+      switch(preset)
       {
         case 0x43: // Quiet
-          this->fan_mode = climate::CLIMATE_FAN_DIFFUSE;
+          return "Quiet";
         break;
         case 0x42: // Powerful
-          this->fan_mode = climate::CLIMATE_FAN_FOCUS;
+          return "Powerful";
         break;
-        case 0x41: // Normal (see determine_fan_speed)
-          // Ignore
+        case 0x41: // Normal
+          return "Normal";
         break;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown fan power");
+          return "Normal";
         break;
       }
     }
@@ -386,7 +415,7 @@ namespace ESPPAC
         break;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing position");
-          return "unknown";
+          return "Unknown";
         break;
       }
     }
@@ -412,7 +441,7 @@ namespace ESPPAC
         break;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown horizontal swing position");
-          return "unknown";
+          return "Unknown";
         break;
       }
     }
@@ -492,8 +521,8 @@ namespace ESPPAC
 
         update_nanoex(nanoex);
 
-        determine_fan_speed(receiveBuffer[26]);
-        determine_fan_power(receiveBuffer[42]); // Fan power can overwrite fan speed
+        this->custom_fan_mode = determine_fan_speed(receiveBuffer[26]);
+        this->custom_preset = determine_preset(receiveBuffer[42]);
 
         determine_swing(receiveBuffer[30]);
 
@@ -557,10 +586,10 @@ namespace ESPPAC
             break;
             case 0xA0: // Fan speed
               ESP_LOGV(ESPPAC::TAG, "Received fan speed");
-              determine_fan_speed(receiveBuffer[currentIndex + 2]);
+              this->custom_fan_mode = determine_fan_speed(receiveBuffer[currentIndex + 2]);
             case 0xB2:
-              ESP_LOGV(ESPPAC::TAG, "Received fan power mode");
-              determine_fan_power(receiveBuffer[currentIndex + 2]);
+              ESP_LOGV(ESPPAC::TAG, "Received preset");
+              this->custom_preset = determine_preset(receiveBuffer[currentIndex + 2]);
             break;
             case 0xA1:
               ESP_LOGV(ESPPAC::TAG, "Received swing mode");

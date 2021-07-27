@@ -36,6 +36,8 @@ namespace ESPPAC
         void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor) override;
         void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor) override;
         void set_nanoex_switch(switch_::Switch *nanoex_switch) override;
+        //void set_eco_switch(switch_::Switch *eco_switch) override; // TODO: Implement
+        //void set_mild_dry_switch(switch_::Switch *mild_dry_switch) override; // TODO: Implement
 
         void setup() override;
         void loop() override;
@@ -64,8 +66,8 @@ namespace ESPPAC
         void send_packet(byte* packet, size_t packetLength, CommandType type = CommandType::Normal);
 
         void determine_mode(byte mode);
-        void determine_fan_speed(byte speed);
-        void determine_fan_power(byte power);
+        std::string determine_fan_speed(byte speed);
+        std::string determine_preset(byte preset);
         const char* determine_swing_vertical(byte swing);
         const char* determine_swing_horizontal(byte swing);
         void determine_swing(byte swing);

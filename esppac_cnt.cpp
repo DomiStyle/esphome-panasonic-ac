@@ -83,34 +83,26 @@ namespace ESPPAC
         this->data[1] = *call.get_target_temperature() * 2;
       }
 
-      if(call.get_fan_mode().has_value())
+      if(call.get_custom_fan_mode().has_value())
       {
         ESP_LOGV(ESPPAC::TAG, "Requested fan mode change");
 
-        switch(*call.get_fan_mode())
-        {
-          case climate::CLIMATE_FAN_AUTO:
-            this->data[3] = 0xA0;
-          break;
-          case climate::CLIMATE_FAN_LOW:
-            this->data[3] = 0x30;
-          break;
-          case climate::CLIMATE_FAN_MEDIUM:
-            this->data[3] = 0x40;
-          break;
-          case climate::CLIMATE_FAN_MIDDLE:
-            this->data[3] = 0x50;
-          break;
-          case climate::CLIMATE_FAN_HIGH:
-            this->data[3] = 0x60;
-          break;
-          case climate::CLIMATE_FAN_FOCUS:
-            this->data[3] = 0x70;
-          break;
-          default:
-            ESP_LOGV(ESPPAC::TAG, "Unsupported fan mode requested");
-          break;
-        }
+        std::string fanMode = *call.get_custom_fan_mode();
+
+        if(fanMode.compare("Auto") == 0)
+          this->data[3] = 0xA0;
+        else if(fanMode.compare("1") == 0)
+          this->data[3] = 0x30;
+        else if(fanMode.compare("2") == 0)
+          this->data[3] = 0x40;
+        else if(fanMode.compare("3") == 0)
+          this->data[3] = 0x50;
+        else if(fanMode.compare("4") == 0)
+          this->data[3] = 0x60;
+        else if(fanMode.compare("5") == 0)
+          this->data[3] = 0x70;
+        else
+          ESP_LOGV(ESPPAC::TAG, "Unsupported fan mode requested");
       }
 
       if(call.get_swing_mode().has_value())
@@ -166,7 +158,7 @@ namespace ESPPAC
 
         std::string preset = *call.get_custom_preset();
 
-        if(preset.compare("None") == 0)
+        if(preset.compare("Normal") == 0)
           this->data[5] = (this->data[5] & 0xF0); // Clear right nib for normal mode
         else if(preset.compare("Powerful") == 0)
           this->data[5] = (this->data[5] & 0xF0) + 0x02; // Clear right nib and set powerful mode
@@ -186,8 +178,8 @@ namespace ESPPAC
     void PanasonicACCNT::set_data(bool set)
     {
       climate::ClimateMode mode = determine_mode(data[0]);
-      //std::string fanSpeed = determine_fan_speed(data[3]);
-      climate::ClimateFanMode fanSpeed = determine_fan_speed(data[3]);
+      std::string fanSpeed = determine_fan_speed(data[3]);
+      //climate::ClimateFanMode fanSpeed = determine_fan_speed(data[3]);
 
       const char* verticalSwing = determine_vertical_swing(data[4]);
       const char* horizontalSwing = determine_horizontal_swing(data[4]);
@@ -200,8 +192,8 @@ namespace ESPPAC
       this->mode = mode;
       //this->action = determine_action();
 
-      //this->custom_fan_mode = fanSpeed;
-      this->fan_mode = fanSpeed;
+      this->custom_fan_mode = fanSpeed;
+      //this->fan_mode = fanSpeed;
 
       this->update_target_temperature((int8_t)data[1]);
 
@@ -381,33 +373,33 @@ namespace ESPPAC
       }
     }
 
-    //std::string PanasonicACCNT::determine_fan_speed(byte speed)
-    climate::ClimateFanMode PanasonicACCNT::determine_fan_speed(byte speed)
+    std::string PanasonicACCNT::determine_fan_speed(byte speed)
+    //climate::ClimateFanMode PanasonicACCNT::determine_fan_speed(byte speed)
     {
       switch(speed)
       {
         case 0xA0: // Auto
-          //return "auto";
-          return climate::CLIMATE_FAN_AUTO;
+          return "Auto";
+          //return climate::CLIMATE_FAN_AUTO;
         case 0x30: // 1
-          //return "1";
-          return climate::CLIMATE_FAN_LOW;
+          return "1";
+          //return climate::CLIMATE_FAN_LOW;
         case 0x40: // 2
-          //return "2";
-          return climate::CLIMATE_FAN_MEDIUM;
+          return "2";
+          //return climate::CLIMATE_FAN_MEDIUM;
         case 0x50: // 3
-          //return "3";
-          return climate::CLIMATE_FAN_MIDDLE;
+          return "3";
+          //return climate::CLIMATE_FAN_MIDDLE;
         case 0x60: // 4
-          //return "4";
-          return climate::CLIMATE_FAN_HIGH;
+          return "4";
+          //return climate::CLIMATE_FAN_HIGH;
         case 0x70: // 5
-          //return "5";
-          return climate::CLIMATE_FAN_FOCUS;
+          return "5";
+          //return climate::CLIMATE_FAN_FOCUS;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown fan speed");
-          //return "unknown";
-          return climate::CLIMATE_FAN_OFF;
+          return "Unknown";
+          //return climate::CLIMATE_FAN_OFF;
       }
     }
 
@@ -433,7 +425,7 @@ namespace ESPPAC
           return "unsupported";
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown vertical swing mode");
-          return "unknown";
+          return "Unknown";
       }
     }
 
@@ -459,7 +451,7 @@ namespace ESPPAC
           return "unsupported";
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown horizontal swing mode");
-          return "unknown";
+          return "Unknown";
       }
     }
 
@@ -477,11 +469,11 @@ namespace ESPPAC
           return "Quiet";
         case 0x00:
           //return climate::CLIMATE_PRESET_NONE;
-          return "None";
+          return "Normal";
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown preset");
           //return climate::CLIMATE_PRESET_NONE;
-          return "None";
+          return "Normal";
       }
     }
 

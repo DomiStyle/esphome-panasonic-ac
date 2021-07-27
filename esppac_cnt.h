@@ -25,8 +25,8 @@ namespace ESPPAC
 
         void control(const climate::ClimateCall &call) override;
 
-        //void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor) override;
-        //void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor) override;
+        void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor) override;
+        void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor) override;
         void set_nanoex_switch(switch_::Switch *nanoex_switch) override;
         void set_eco_switch(switch_::Switch *eco_switch) override;
         void set_mild_dry_switch(switch_::Switch *mild_dry_switch) override;
@@ -49,8 +49,7 @@ namespace ESPPAC
         void handle_packet();
 
         climate::ClimateMode determine_mode(byte mode);
-        //std::string determine_fan_speed(byte speed);
-        climate::ClimateFanMode determine_fan_speed(byte speed);
+        std::string determine_fan_speed(byte speed);
 
         const char* determine_vertical_swing(byte swing);
         const char* determine_horizontal_swing(byte swing);

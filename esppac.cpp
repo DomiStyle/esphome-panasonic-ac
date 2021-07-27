@@ -36,15 +36,9 @@ namespace ESPPAC
 
       traits.set_supported_fan_modes(
       {
-        climate::CLIMATE_FAN_AUTO,
-        climate::CLIMATE_FAN_LOW,
-        climate::CLIMATE_FAN_MEDIUM,
-        climate::CLIMATE_FAN_HIGH,
-        climate::CLIMATE_FAN_MIDDLE,
-        climate::CLIMATE_FAN_FOCUS
+        climate::CLIMATE_FAN_AUTO
       });
 
-/*
       traits.set_supported_custom_fan_modes(
       {
         "Auto",
@@ -54,7 +48,6 @@ namespace ESPPAC
         "4",
         "5"
       });
-*/
 
       traits.set_supported_swing_modes(
       {
@@ -64,18 +57,9 @@ namespace ESPPAC
         climate::CLIMATE_SWING_HORIZONTAL
       });
 
-/*
-      traits.set_supported_presets(
-      {
-        climate::CLIMATE_PRESET_NONE, // No preset active
-        climate::CLIMATE_PRESET_BOOST, // Powerful
-        climate::CLIMATE_PRESET_ECO // Quiet
-      });
-*/
-
       traits.set_supported_custom_presets(
       {
-        "None",
+        "Normal",
         "Powerful",
         "Quiet"
       });
