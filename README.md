@@ -59,6 +59,7 @@ In order to manually adjust the swing modes for the AC, two input_select fields 
 Configuration -> Helpers -> Add -> Dropdown:
 
 Name: Horizontal swing
+
 Icon: mdi:swap-horizontal
 
 Options:
@@ -70,7 +71,9 @@ Options:
 
 
 Name: Vertical swing
+
 Icon: mdi:swap-vertical
+
 Options:
 * down
 * down_center
