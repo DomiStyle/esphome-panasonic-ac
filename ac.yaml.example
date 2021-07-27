@@ -38,6 +38,7 @@ sensor:
     accuracy_decimals: 0
 
 # Text sensors to determine fixed vertical and horizontal swing position
+# See README for instructions on how to set them up
 text_sensor:
   - platform: homeassistant
     id: ac01_vertical_swing
@@ -66,7 +67,8 @@ text_sensor:
             swing: |-
               return id(ac01_horizontal_swing).state;
 
-# Switch to enable/disable nanoeX
+# Switches to enable certain features
+# Remove the ones that are not needed for your AC
 switch:
   - platform: template
     id: ac01_nanoex_switch

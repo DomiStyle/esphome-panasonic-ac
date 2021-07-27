@@ -24,7 +24,7 @@ Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial por
 * Soldering iron
 * Wires to solder from Logic converter to ESP
 * Heat shrink
-* ESPHome 1.19.1 or newer
+* ESPHome 1.20.1 or newer
 
 # Notes
 
@@ -46,11 +46,71 @@ esphome-panasonic-ac/
   ...
 ```
 * Uncomment one of the lines on the bottom of the file depending on your adapter type
-* Adjust the ac.yaml to your needs
+* Adjust the `ac.yaml` to your needs
 * Connect your ESP
 * Run `esphome ac.yaml run` and choose your serial port (or do this via the Home Assistant UI)
 * If you see the handshake messages being sent (DNSK-P11) or polling requests being sent (CZ-TACG1) in the log you are good to go
 * Disconnect the ESP and continue with hardware installation
+
+## Adding manual swing selection to Home Assistant
+
+In order to manually adjust the swing modes for the AC, two input_select fields have to be added to Home Assistant manually.
+
+Configuration -> Helpers -> Add -> Dropdown:
+
+Name: Horizontal swing
+Icon: mdi:swap-horizontal
+
+Options:
+* left
+* left_center
+* center
+* right_center
+* right
+
+
+Name: Vertical swing
+Icon: mdi:swap-vertical
+Options:
+* down
+* down_center
+* center
+* up_center
+* up
+
+After that set the entity IDs of those dropdowns to the entity_id set in your `ac.yaml`:
+
+```
+  text_sensor:
+    - platform: homeassistant
+      id: ac01_vertical_swing
+      name: ac01_vertical_swing
+      entity_id: **input_select.ac01_vertical_swing**
+      on_value:
+        - homeassistant.service:
+            service: input_select.select_option
+            data_template:
+              entity_id: **input_select.ac01_vertical_swing**
+              option: "{{ swing }}"
+            variables:
+              swing: |-
+                return id(ac01_vertical_swing).state;
+```
+
+## Setting supported features
+
+Since Panasonic ACs support different features you can comment out the lines at the bottom of your `ac.yaml`:
+
+```
+  // Enable as needed
+  // ac->set_nanoex_switch(id(ac01_nanoex_switch));
+  // ac->set_eco_switch(id(ac01_eco_switch));
+  // ac->set_mild_dry_switch(id(ac01_mild_dry_switch));
+```
+
+In order to find out which features are supported by your AC, check the remote that came with it.
+To clean up the sensors in Home Assistant you can just delete them:
+
 
 # Hardware installation
 
