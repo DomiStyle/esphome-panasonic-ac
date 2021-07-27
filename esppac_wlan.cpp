@@ -497,8 +497,8 @@ namespace ESPPAC
 
         determine_swing(receiveBuffer[30]);
 
-        climate::ClimateAction action = determine_action(); // Determine the current action of the AC
-        this->action = action;
+        //climate::ClimateAction action = determine_action(); // Determine the current action of the AC
+        //this->action = action;
 
         this->publish_state();
       }

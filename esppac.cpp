@@ -16,7 +16,7 @@ namespace ESPPAC
     {
       auto traits = climate::ClimateTraits();
 
-      traits.set_supports_action(true);
+      traits.set_supports_action(false);
 
       traits.set_supports_current_temperature(true);
       traits.set_supports_two_point_target_temperature(false);

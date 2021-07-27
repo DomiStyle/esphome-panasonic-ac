@@ -198,7 +198,7 @@ namespace ESPPAC
       bool mildDry = determine_mild_dry(data[2]);
 
       this->mode = mode;
-      this->action = determine_action();
+      //this->action = determine_action();
 
       //this->custom_fan_mode = fanSpeed;
       this->fan_mode = fanSpeed;
