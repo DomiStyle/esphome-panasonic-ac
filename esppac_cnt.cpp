@@ -194,7 +194,7 @@ namespace ESPPAC
 
       std::string preset = determine_preset(data[5]);
       bool nanoex = determine_preset_nanoex(data[5]);
-      bool eco = determine_eco(data[6]);
+      bool eco = determine_eco(data[8]);
       bool mildDry = determine_mild_dry(data[2]);
 
       this->mode = mode;
@@ -571,12 +571,12 @@ namespace ESPPAC
           if(value)
           {
             ESP_LOGV(ESPPAC::TAG, "Turning eco mode on");
-            this->data[6] = 0x40;
+            this->data[8] = 0x40;
           }
           else
           {
             ESP_LOGV(ESPPAC::TAG, "Turning eco mode off");
-            this->data[6] = 0x00;
+            this->data[8] = 0x00;
           }
 
           send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
