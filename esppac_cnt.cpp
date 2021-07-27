@@ -526,6 +526,68 @@ namespace ESPPAC
       }
     }
 
+    /*
+    * Sensor handling
+    */
+
+    void PanasonicACCNT::set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor)
+    {
+      PanasonicAC::set_vertical_swing_sensor(vertical_swing_sensor);
+
+      this->vertical_swing_sensor->add_on_state_callback([this](std::string value)
+      {
+        if(this->state != ACState::Ready)
+          return;
+
+        if(value != this->vertical_swing_state) // Ignore if already the correct state
+        {
+          ESP_LOGD(ESPPAC::TAG, "Setting vertical swing position");
+
+          if(value == "down")
+            this->data[4] = (this->data[4] & 0x0F) + 0x50;
+          else if(value == "down_center")
+            this->data[4] = (this->data[4] & 0x0F) + 0x40;
+          else if(value == "center")
+            this->data[4] = (this->data[4] & 0x0F) + 0x30;
+          else if(value == "up_center")
+            this->data[4] = (this->data[4] & 0x0F) + 0x20;
+          else if(value == "up")
+            this->data[4] = (this->data[4] & 0x0F) + 0x10;
+
+          send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+        }
+      });
+    }
+
+    void PanasonicACCNT::set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor)
+    {
+      PanasonicAC::set_horizontal_swing_sensor(horizontal_swing_sensor);
+
+      this->horizontal_swing_sensor->add_on_state_callback([this](std::string value)
+      {
+        if(this->state != ACState::Ready)
+          return;
+
+        if(value != this->horizontal_swing_state) // Ignore if already the correct state
+        {
+          ESP_LOGD(ESPPAC::TAG, "Setting horizontal swing position");
+
+          if(value == "left")
+            this->data[4] = (this->data[4] & 0xF0) + 0x09;
+          else if(value == "left_center")
+            this->data[4] = (this->data[4] & 0xF0) + 0x0A;
+          else if(value == "center")
+            this->data[4] = (this->data[4] & 0xF0) + 0x06;
+          else if(value == "right_center")
+            this->data[4] = (this->data[4] & 0xF0) + 0x0B;
+          else if(value == "right")
+            this->data[4] = (this->data[4] & 0xF0) + 0x0C;
+
+          send_command(this->data, 10, CommandType::Normal, ESPPAC::CNT::CTRL_HEADER);
+        }
+      });
+    }
+
     void PanasonicACCNT::set_nanoex_switch(switch_::Switch *nanoex_switch)
     {
       PanasonicAC::set_nanoex_switch(nanoex_switch);
