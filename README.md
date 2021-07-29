@@ -114,6 +114,9 @@ Since Panasonic ACs support different features you can comment out the lines at 
 In order to find out which features are supported by your AC, check the remote that came with it.
 To clean up the sensors in Home Assistant you can just delete them:
 
+## Upgrading from 1.x to 2.x
+
+[Upgrade instructions](README.UPGRADING.md)
 
 # Hardware installation
 
