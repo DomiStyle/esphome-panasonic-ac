@@ -89,7 +89,7 @@ namespace ESPPAC
 
         std::string fanMode = *call.get_custom_fan_mode();
 
-        if(fanMode.compare("Auto") == 0)
+        if(fanMode.compare("Automatic") == 0)
           this->data[3] = 0xA0;
         else if(fanMode.compare("1") == 0)
           this->data[3] = 0x30;
@@ -379,7 +379,7 @@ namespace ESPPAC
       switch(speed)
       {
         case 0xA0: // Auto
-          return "Auto";
+          return "Automatic";
           //return climate::CLIMATE_FAN_AUTO;
         case 0x30: // 1
           return "1";

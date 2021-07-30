@@ -34,14 +34,9 @@ namespace ESPPAC
         climate::CLIMATE_MODE_DRY
       });
 
-      traits.set_supported_fan_modes(
-      {
-        climate::CLIMATE_FAN_AUTO
-      });
-
       traits.set_supported_custom_fan_modes(
       {
-        "Auto",
+        "Automatic",
         "1",
         "2",
         "3",

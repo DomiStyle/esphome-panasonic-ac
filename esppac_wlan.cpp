@@ -118,7 +118,7 @@ namespace ESPPAC
 
         std::string fanMode = *call.get_custom_fan_mode();
 
-        if(fanMode.compare("Auto") == 0)
+        if(fanMode.compare("Automatic") == 0)
         {
           set_value(0xB2, 0x41);
           set_value(0xA0, 0x41);
@@ -365,7 +365,7 @@ namespace ESPPAC
           return "5";
         break;
         case 0x41: // Auto
-          return "Auto";
+          return "Automatic";
         break;
         default:
           ESP_LOGW(ESPPAC::TAG, "Received unknown fan speed");
