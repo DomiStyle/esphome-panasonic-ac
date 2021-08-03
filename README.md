@@ -25,6 +25,7 @@ Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial por
 * Wires to solder from Logic converter to ESP
 * Heat shrink
 * ESPHome 1.20.1 or newer
+* Home Assistant 2021.8.0 or newer
 
 # Notes
 
