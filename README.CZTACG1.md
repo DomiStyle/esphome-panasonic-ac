@@ -17,15 +17,16 @@ This hardware installation guide assumes you already have a Panasonic CZ-TACG1 i
 * Disconnect the AC mains supply
 * Open up the front of your AC
 * Open up the mains supply on the right to gain easier access to the CN-CNT connector
-* Your wifi adapter should be located on the top right of the unit
-  * TODO IMAGE
+* Your wifi adapter should be located in a plastic slot or outside of your AC
+![wifi adapter](images/cztacg1/wifi_module.jpg)
 * Remove the old wifi adapter and unplug it
 * Solder 4 jumper cables to the CN-CNT wires (https://github.com/Egyras/HeishaMon#where-to-get-connectors)
+![wifi adapter](images/cztacg1/connector.jpg)
   * Note: RX/TX is from the direction of the ESP, not the AC.
 * Heat shrink the individual wires (**do not skip this step to avoid short ciruits**)
-  * TODO IMAGE
 * Connect the jumper cables to your logic converter
-* Place the ESP and the logic converter in the top right slot for the wifi adapter (you can use some velcro to fix it in place)
-  * TODO IMAGE
+* Place the ESP and the logic converter in the slot for the wifi adapter (you can use some velcro to fix it in place)
+* Plug in the ESP at the CN-CNT connector
+![wifi adapter](images/cztacg1/cncnt.jpg)
 
 Reconnect the AC mains supply. You can now connect this ESP to Home Assistant and control it from there.
