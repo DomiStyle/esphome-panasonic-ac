@@ -133,9 +133,9 @@ namespace ESPPAC
     {
       this->horizontal_swing_state = swing;
 
-      if(this->horizontal_swing_sensor != NULL && this->horizontal_swing_sensor->state != this->horizontal_swing_state)
+      if(this->horizontal_swing_select != NULL && this->horizontal_swing_select->state != this->horizontal_swing_state)
       {
-        this->horizontal_swing_sensor->publish_state(this->horizontal_swing_state); // Set current horizontal swing position
+        this->horizontal_swing_select->publish_state(this->horizontal_swing_state); // Set current horizontal swing position
       }
     }
 
@@ -143,8 +143,8 @@ namespace ESPPAC
     {
       this->vertical_swing_state = swing;
 
-      if(this->vertical_swing_sensor != NULL && this->vertical_swing_sensor->state != this->vertical_swing_state)
-        this->vertical_swing_sensor->publish_state(this->vertical_swing_state); // Set current vertical swing position
+      if(this->vertical_swing_select != NULL && this->vertical_swing_select->state != this->vertical_swing_state)
+        this->vertical_swing_select->publish_state(this->vertical_swing_state); // Set current vertical swing position
     }
 
     void PanasonicAC::update_nanoex(bool nanoex)
@@ -211,14 +211,14 @@ namespace ESPPAC
       this->outside_temperature_sensor = outside_temperature_sensor;
     }
 
-    void PanasonicAC::set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor)
+    void PanasonicAC::set_vertical_swing_select(select::Select *vertical_swing_select)
     {
-      this->vertical_swing_sensor = vertical_swing_sensor;
+      this->vertical_swing_select = vertical_swing_select;
     }
 
-    void PanasonicAC::set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor)
+    void PanasonicAC::set_horizontal_swing_select(select::Select *horizontal_swing_select)
     {
-      this->horizontal_swing_sensor = horizontal_swing_sensor;
+      this->horizontal_swing_select = horizontal_swing_select;
     }
 
     void PanasonicAC::set_nanoex_switch(switch_::Switch *nanoex_switch)

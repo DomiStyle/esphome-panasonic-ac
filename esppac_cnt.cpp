@@ -522,11 +522,11 @@ namespace ESPPAC
     * Sensor handling
     */
 
-    void PanasonicACCNT::set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor)
+    void PanasonicACCNT::set_vertical_swing_select(select::Select *vertical_swing_select)
     {
-      PanasonicAC::set_vertical_swing_sensor(vertical_swing_sensor);
+      PanasonicAC::set_vertical_swing_select(vertical_swing_select);
 
-      this->vertical_swing_sensor->add_on_state_callback([this](std::string value)
+      this->vertical_swing_select->add_on_state_callback([this](std::string value)
       {
         if(this->state != ACState::Ready)
           return;
@@ -551,11 +551,11 @@ namespace ESPPAC
       });
     }
 
-    void PanasonicACCNT::set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor)
+    void PanasonicACCNT::set_horizontal_swing_select(select::Select *horizontal_swing_select)
     {
-      PanasonicAC::set_horizontal_swing_sensor(horizontal_swing_sensor);
+      PanasonicAC::set_horizontal_swing_select(horizontal_swing_select);
 
-      this->horizontal_swing_sensor->add_on_state_callback([this](std::string value)
+      this->horizontal_swing_select->add_on_state_callback([this](std::string value)
       {
         if(this->state != ACState::Ready)
           return;

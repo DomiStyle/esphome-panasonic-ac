@@ -37,35 +37,28 @@ sensor:
     unit_of_measurement: °C
     accuracy_decimals: 0
 
-# Text sensors to determine fixed vertical and horizontal swing position
-# See README for instructions on how to set them up
-text_sensor:
-  - platform: homeassistant
+# Selects to determine manual swing positions
+select:
+  - platform: template
     id: ac01_vertical_swing
     name: ac01_vertical_swing
-    entity_id: input_select.ac01_vertical_swing
-    on_value:
-      - homeassistant.service:
-          service: input_select.select_option
-          data_template:
-            entity_id: input_select.ac01_vertical_swing
-            option: "{{ swing }}"
-          variables:
-            swing: |-
-              return id(ac01_vertical_swing).state;
-  - platform: homeassistant
+    optimistic: true
+    options:
+      - up
+      - up_center
+      - center
+      - down_center
+      - down
+  - platform: template
     id: ac01_horizontal_swing
     name: ac01_horizontal_swing
-    entity_id: input_select.ac01_horizontal_swing
-    on_value:
-      - homeassistant.service:
-          service: input_select.select_option
-          data_template:
-            entity_id: input_select.ac01_horizontal_swing
-            option: "{{ swing }}"
-          variables:
-            swing: |-
-              return id(ac01_horizontal_swing).state;
+    optimistic: true
+    options:
+      - left
+      - left_center
+      - center
+      - right_center
+      - right
 
 # Switches to enable certain features
 # Remove the ones that are not needed for your AC
@@ -94,8 +87,8 @@ climate:
       // auto ac = new ESPPAC::CNT::PanasonicACCNT(id(ac_uart));
 
       ac->set_outside_temperature_sensor(id(ac01_outside_temperature));
-      ac->set_vertical_swing_sensor(id(ac01_vertical_swing));
-      ac->set_horizontal_swing_sensor(id(ac01_horizontal_swing));
+      ac->set_vertical_swing_select(id(ac_cnt_vertical_swing));
+      ac->set_horizontal_swing_select(id(ac_cnt_horizontal_swing));
 
       // Enable as needed
       // ac->set_nanoex_switch(id(ac01_nanoex_switch));

@@ -53,54 +53,6 @@ esphome-panasonic-ac/
 * If you see the handshake messages being sent (DNSK-P11) or polling requests being sent (CZ-TACG1) in the log you are good to go
 * Disconnect the ESP and continue with hardware installation
 
-## Adding manual swing selection to Home Assistant
-
-In order to manually adjust the swing modes for the AC, two input_select fields have to be added to Home Assistant manually.
-
-Configuration -> Helpers -> Add -> Dropdown:
-
-Name: Horizontal swing
-
-Icon: mdi:swap-horizontal
-
-Options:
-* left
-* left_center
-* center
-* right_center
-* right
-
-
-Name: Vertical swing
-
-Icon: mdi:swap-vertical
-
-Options:
-* down
-* down_center
-* center
-* up_center
-* up
-
-After that set the entity IDs of those dropdowns to the entity_id set in your `ac.yaml`:
-
-```
-  text_sensor:
-    - platform: homeassistant
-      id: ac01_vertical_swing
-      name: ac01_vertical_swing
-      entity_id: **input_select.ac01_vertical_swing**
-      on_value:
-        - homeassistant.service:
-            service: input_select.select_option
-            data_template:
-              entity_id: **input_select.ac01_vertical_swing**
-              option: "{{ swing }}"
-            variables:
-              swing: |-
-                return id(ac01_vertical_swing).state;
-```
-
 ## Setting supported features
 
 Since Panasonic ACs support different features you can comment out the lines at the bottom of your `ac.yaml`:
@@ -113,7 +65,9 @@ Since Panasonic ACs support different features you can comment out the lines at 
 ```
 
 In order to find out which features are supported by your AC, check the remote that came with it.
-To clean up the sensors in Home Assistant you can just delete them:
+To clean up the sensors in Home Assistant you can just delete them.
+
+**Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 
 ## Upgrading from 1.x to 2.x
 

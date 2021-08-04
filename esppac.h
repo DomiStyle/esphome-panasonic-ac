@@ -39,8 +39,8 @@ namespace ESPPAC
       void control(const climate::ClimateCall &call) override;
 
       virtual void set_outside_temperature_sensor(sensor::Sensor *outside_temperature_sensor);
-      virtual void set_vertical_swing_sensor(text_sensor::TextSensor *vertical_swing_sensor);
-      virtual void set_horizontal_swing_sensor(text_sensor::TextSensor *horizontal_swing_sensor);
+      virtual void set_vertical_swing_select(select::Select *vertical_swing_select);
+      virtual void set_horizontal_swing_select(select::Select *horizontal_swing_select);
       virtual void set_nanoex_switch(switch_::Switch *nanoex_switch);
       virtual void set_eco_switch(switch_::Switch *eco_switch);
       virtual void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
@@ -50,8 +50,8 @@ namespace ESPPAC
 
     protected:
       sensor::Sensor *outside_temperature_sensor = NULL; // Sensor to store outside temperature from queries
-      text_sensor::TextSensor *vertical_swing_sensor = NULL; // Text sensor to store manual position of vertical swing
-      text_sensor::TextSensor *horizontal_swing_sensor = NULL; // Text sensor to store manual position of horizontal swing
+      select::Select *vertical_swing_select = NULL; // Select to store manual position of vertical swing
+      select::Select *horizontal_swing_select = NULL; // Select to store manual position of horizontal swing
       switch_::Switch *nanoex_switch = NULL; // Switch to toggle nanoeX on/off
       switch_::Switch *eco_switch = NULL; // Switch to toggle eco mode on/off
       switch_::Switch *mild_dry_switch = NULL; // Switch to toggle mild dry mode on/off
