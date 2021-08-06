@@ -1,28 +1,18 @@
-namespace ESPPAC
-{
-  namespace CNT
-  {
-    /*
-    * Poll command
-    */
+#include <vector>
 
-    static const byte CMD_POLL[]
-    {
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00
-    };
+namespace esphome {
+namespace panasonic_ac {
+namespace CNT {
 
-    /*
-    * Control command
-    */
+/*
+ * Poll command
+ */
+
+static const std::vector<uint8_t> CMD_POLL = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+/*
+ * Control command
+ */
 
 /*
       static const byte CMD_TEMPERATURE[]
@@ -68,5 +58,7 @@ namespace ESPPAC
         0x00
       };
       */
-  }
-}
+
+}  // namespace CNT
+}  // namespace panasonic_ac
+}  // namespace esphome

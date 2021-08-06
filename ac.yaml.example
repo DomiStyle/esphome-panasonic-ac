@@ -1,102 +1,52 @@
 esphome:
-  name: ac01
+  name: panasonic-ac
   platform: ESP32
   board: nodemcu-32s
-  includes:
-    - ./esphome-panasonic-ac
 
 wifi:
   networks:
-    - ssid: "IoT"
-      password: "12345678"
-  use_address: ac01.example.org
+  ap: {}
 
 logger:
   level: DEBUG
 #  baud_rate: 0 # ESP8266 only
 
 api:
-  password: "1234"
 
 ota:
-  password: "1234"
 
 # Requires ESPHome 1.15.0+ for the even parity option
 uart:
   tx_pin: GPIO17
   rx_pin: GPIO16
-  id: ac_uart
   baud_rate: 9600
   parity: EVEN
 
-# Template sensor to show outside temperature reported by AC
-sensor:
-  - platform: template
-    id: ac01_outside_temperature
-    name: ac01_outside_temperature
-    unit_of_measurement: °C
-    accuracy_decimals: 0
+external_components:
+  source: github://jesserockz/esphome-panasonic-ac@external-component
+  components: [panasonic_ac]
 
-# Selects to determine manual swing positions
-select:
-  - platform: template
-    id: ac01_vertical_swing
-    name: ac01_vertical_swing
-    optimistic: true
-    options:
-      - up
-      - up_center
-      - center
-      - down_center
-      - down
-  - platform: template
-    id: ac01_horizontal_swing
-    name: ac01_horizontal_swing
-    optimistic: true
-    options:
-      - left
-      - left_center
-      - center
-      - right_center
-      - right
 
-# Switches to enable certain features
-# Remove the ones that are not needed for your AC
-switch:
-  - platform: template
-    id: ac01_nanoex_switch
-    name: ac01_nanoex_switch
-    optimistic: true
-  - platform: template
-    id: ac01_eco_switch
-    name: ac01_eco_switch
-    optimistic: true
-  - platform: template
-    id: ac01_mild_dry_switch
-    name: ac01_mild_dry_switch
-    optimistic: true
-
-# Main climate component, switches and sensors are set in the lambda; remove if not wanted
 climate:
-  - platform: custom
-    lambda: |-
-      // For DNSK-P11
-      // auto ac = new ESPPAC::WLAN::PanasonicACWLAN(id(ac_uart));
+  - platform: panasonic_ac
+    # For CZ-TACG1
+    # type: cnt
 
-      // For CZ-TACG1
-      // auto ac = new ESPPAC::CNT::PanasonicACCNT(id(ac_uart));
+    # For DNSK-P11
+    # type: wlan
 
-      ac->set_outside_temperature_sensor(id(ac01_outside_temperature));
-      ac->set_vertical_swing_select(id(ac_cnt_vertical_swing));
-      ac->set_horizontal_swing_select(id(ac_cnt_horizontal_swing));
+    name: Panasonic AC
+    horizontal_swing_select:
+      name: Panasonic AC Horizontal Swing Mode
+    vertical_swing_select:
+      name: Panasonic AC Vertical Swing Mode
+    outside_temperature:
+      name: Panasonic AC Outside Temperature
 
-      // Enable as needed
-      // ac->set_nanoex_switch(id(ac01_nanoex_switch));
-      // ac->set_eco_switch(id(ac01_eco_switch));
-      // ac->set_mild_dry_switch(id(ac01_mild_dry_switch));
-
-      App.register_component(ac);
-      return {ac};
-    climates:
-      - id: ac01
-        name: ac01
+    # Enable as needed
+    # eco_switch:
+    #   name: Panasonic AC Eco Switch
+    # nanoex_switch:
+    #   name: Panasonic AC NanoeX Switch
+    # mild_dry_switch:
+    #   name: Panasonic AC Mild Dry Switch
