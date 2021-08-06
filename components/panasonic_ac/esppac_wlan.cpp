@@ -290,8 +290,7 @@ bool PanasonicACWLAN::verify_packet() {
  * Field handling
  */
 
-climate::ClimateMode PanasonicACWLAN::determine_mode(uint8_t mode)
-{
+climate::ClimateMode PanasonicACWLAN::determine_mode(uint8_t mode) {
   switch (mode)  // Check mode
   {
     case 0x41:  // Auto
@@ -310,8 +309,7 @@ climate::ClimateMode PanasonicACWLAN::determine_mode(uint8_t mode)
   }
 }
 
-std::string PanasonicACWLAN::determine_fan_speed(uint8_t speed)
-{
+std::string PanasonicACWLAN::determine_fan_speed(uint8_t speed) {
   switch (speed) {
     case 0x32:  // 1
       return "1";
@@ -331,8 +329,7 @@ std::string PanasonicACWLAN::determine_fan_speed(uint8_t speed)
   }
 }
 
-std::string PanasonicACWLAN::determine_preset(uint8_t preset)
-{
+std::string PanasonicACWLAN::determine_preset(uint8_t preset) {
   switch (preset) {
     case 0x43:  // Quiet
       return "Quiet";
@@ -346,8 +343,7 @@ std::string PanasonicACWLAN::determine_preset(uint8_t preset)
   }
 }
 
-std::string PanasonicACWLAN::determine_swing_vertical(uint8_t swing)
-{
+std::string PanasonicACWLAN::determine_swing_vertical(uint8_t swing) {
   switch (swing) {
     case 0x42:  // Down
       return "down";
@@ -365,8 +361,7 @@ std::string PanasonicACWLAN::determine_swing_vertical(uint8_t swing)
   }
 }
 
-std::string PanasonicACWLAN::determine_swing_horizontal(uint8_t swing)
-{
+std::string PanasonicACWLAN::determine_swing_horizontal(uint8_t swing) {
   switch (swing) {
     case 0x42:  // Left
       return "left";
@@ -384,8 +379,7 @@ std::string PanasonicACWLAN::determine_swing_horizontal(uint8_t swing)
   }
 }
 
-climate::ClimateSwingMode PanasonicACWLAN::determine_swing(uint8_t swing)
-{
+climate::ClimateSwingMode PanasonicACWLAN::determine_swing(uint8_t swing) {
   switch (swing) {
     case 0x41:  // Both
       return climate::CLIMATE_SWING_BOTH;
@@ -401,8 +395,7 @@ climate::ClimateSwingMode PanasonicACWLAN::determine_swing(uint8_t swing)
   }
 }
 
-bool PanasonicACWLAN::determine_nanoex(uint8_t nanoex)
-{
+bool PanasonicACWLAN::determine_nanoex(uint8_t nanoex) {
   switch (nanoex) {
     case 0x42:
       return false;
@@ -657,8 +650,7 @@ void PanasonicACWLAN::send_set_command() {
   this->set_queue_index_ = 0;
 }
 
-void PanasonicACWLAN::send_command(const uint8_t *command, size_t commandLength, CommandType type)
-{
+void PanasonicACWLAN::send_command(const uint8_t *command, size_t commandLength, CommandType type) {
   std::vector<uint8_t> packet(commandLength + 3);  // Reserve space for upcoming packet
 
   for (int i = 0; i < commandLength; i++)  // Loop through command
@@ -690,7 +682,7 @@ void PanasonicACWLAN::send_packet(std::vector<uint8_t> packet, CommandType type)
 
   for (uint8_t i : packet)  // Loop through payload to calculate checksum
   {
-    checksum += i; // Add byte to checksum
+    checksum += i;  // Add byte to checksum
   }
 
   checksum = (~checksum + 1);     // Compute checksum
@@ -730,8 +722,7 @@ void PanasonicACWLAN::handle_resend() {
   }
 }
 
-void PanasonicACWLAN::set_value(uint8_t key, uint8_t value)
-{
+void PanasonicACWLAN::set_value(uint8_t key, uint8_t value) {
   if (this->set_queue_index_ >= 15) {
     ESP_LOGE(TAG, "Set queue overflow");
     this->set_queue_index_ = 0;
