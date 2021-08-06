@@ -6,7 +6,7 @@ namespace esphome {
 namespace panasonic_ac {
 namespace WLAN {
 
-static const byte HEADER = 0x5A;  // The header of the protocol, every packet starts with this
+static const uint8_t HEADER = 0x5A;  // The header of the protocol, every packet starts with this
 
 static const int INIT_TIMEOUT = 10000;       // Time to wait before initializing after boot
 static const int INIT_END_TIMEOUT = 10000;   // Time to wait for last handshake packet
@@ -57,20 +57,20 @@ class PanasonicACWLAN : public PanasonicAC {
   void handle_packet();
 
   void send_set_command();
-  void send_command(const byte *command, size_t commandLength, CommandType type = CommandType::Normal);
+  void send_command(const uint8_t *command, size_t commandLength, CommandType type = CommandType::Normal);
   void send_packet(std::vector<uint8_t> packet, CommandType type = CommandType::Normal);
 
-  climate::ClimateMode determine_mode(byte mode);
-  std::string determine_fan_speed(byte speed);
-  std::string determine_preset(byte preset);
-  const char *determine_swing_vertical(byte swing);
-  const char *determine_swing_horizontal(byte swing);
-  climate::ClimateSwingMode determine_swing(byte swing);
-  bool determine_nanoex(byte nanoex);
+  climate::ClimateMode determine_mode(uint8_t mode);
+  std::string determine_fan_speed(uint8_t speed);
+  std::string determine_preset(uint8_t preset);
+  std::string determine_swing_vertical(uint8_t swing);
+  std::string determine_swing_horizontal(uint8_t swing);
+  climate::ClimateSwingMode determine_swing(uint8_t swing);
+  bool determine_nanoex(uint8_t nanoex);
 
   void handle_resend();
 
-  void set_value(byte key, byte value);
+  void set_value(uint8_t key, uint8_t value);
 };
 
 }  // namespace WLAN

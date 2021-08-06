@@ -290,7 +290,8 @@ bool PanasonicACWLAN::verify_packet() {
  * Field handling
  */
 
-climate::ClimateMode PanasonicACWLAN::determine_mode(byte mode) {
+climate::ClimateMode PanasonicACWLAN::determine_mode(uint8_t mode)
+{
   switch (mode)  // Check mode
   {
     case 0x41:  // Auto
@@ -309,119 +310,99 @@ climate::ClimateMode PanasonicACWLAN::determine_mode(byte mode) {
   }
 }
 
-std::string PanasonicACWLAN::determine_fan_speed(byte speed) {
+std::string PanasonicACWLAN::determine_fan_speed(uint8_t speed)
+{
   switch (speed) {
     case 0x32:  // 1
       return "1";
-      break;
     case 0x33:  // 2
       return "2";
-      break;
     case 0x34:  // 3
       return "3";
-      break;
     case 0x35:  // 4
       return "4";
     case 0x36:  // 5
       return "5";
-      break;
     case 0x41:  // Auto
       return "Automatic";
-      break;
     default:
       ESP_LOGW(TAG, "Received unknown fan speed");
       return "Unknown";
-      break;
   }
 }
 
-std::string PanasonicACWLAN::determine_preset(byte preset) {
+std::string PanasonicACWLAN::determine_preset(uint8_t preset)
+{
   switch (preset) {
     case 0x43:  // Quiet
       return "Quiet";
-      break;
     case 0x42:  // Powerful
       return "Powerful";
-      break;
     case 0x41:  // Normal
       return "Normal";
-      break;
     default:
       ESP_LOGW(TAG, "Received unknown fan power");
       return "Normal";
-      break;
   }
 }
 
-const char *PanasonicACWLAN::determine_swing_vertical(byte swing) {
+std::string PanasonicACWLAN::determine_swing_vertical(uint8_t swing)
+{
   switch (swing) {
     case 0x42:  // Down
       return "down";
-      break;
     case 0x45:  // Down center
       return "down_center";
-      break;
     case 0x43:  // Center
       return "center";
-      break;
     case 0x44:  // Up Center
       return "up_center";
-      break;
     case 0x41:  // Up
       return "up";
-      break;
     default:
       ESP_LOGW(TAG, "Received unknown vertical swing position");
       return "Unknown";
-      break;
   }
 }
 
-const char *PanasonicACWLAN::determine_swing_horizontal(byte swing) {
+std::string PanasonicACWLAN::determine_swing_horizontal(uint8_t swing)
+{
   switch (swing) {
     case 0x42:  // Left
       return "left";
-      break;
     case 0x5C:  // Left center
       return "left_center";
-      break;
     case 0x43:  // Center
       return "center";
-      break;
     case 0x56:  // Right center
       return "right_center";
-      break;
     case 0x41:  // Right
       return "right";
-      break;
     default:
       ESP_LOGW(TAG, "Received unknown horizontal swing position");
       return "Unknown";
-      break;
   }
 }
 
-climate::ClimateSwingMode PanasonicACWLAN::determine_swing(byte swing) {
+climate::ClimateSwingMode PanasonicACWLAN::determine_swing(uint8_t swing)
+{
   switch (swing) {
     case 0x41:  // Both
-      this->swing_mode = climate::CLIMATE_SWING_BOTH;
-      break;
+      return climate::CLIMATE_SWING_BOTH;
     case 0x42:  // Off
-      this->swing_mode = climate::CLIMATE_SWING_OFF;
-      break;
+      return climate::CLIMATE_SWING_OFF;
     case 0x43:  // Vertical
-      this->swing_mode = climate::CLIMATE_SWING_VERTICAL;
-      break;
+      return climate::CLIMATE_SWING_VERTICAL;
     case 0x44:  // Horizontal
-      this->swing_mode = climate::CLIMATE_SWING_HORIZONTAL;
-      break;
+      return climate::CLIMATE_SWING_HORIZONTAL;
     default:
       ESP_LOGW(TAG, "Received unknown swing mode");
-      break;
+      return climate::CLIMATE_SWING_OFF;
   }
 }
 
-bool PanasonicACWLAN::determine_nanoex(byte nanoex) {
+bool PanasonicACWLAN::determine_nanoex(uint8_t nanoex)
+{
   switch (nanoex) {
     case 0x42:
       return false;
@@ -676,7 +657,8 @@ void PanasonicACWLAN::send_set_command() {
   this->set_queue_index_ = 0;
 }
 
-void PanasonicACWLAN::send_command(const byte *command, size_t commandLength, CommandType type) {
+void PanasonicACWLAN::send_command(const uint8_t *command, size_t commandLength, CommandType type)
+{
   std::vector<uint8_t> packet(commandLength + 3);  // Reserve space for upcoming packet
 
   for (int i = 0; i < commandLength; i++)  // Loop through command
@@ -708,7 +690,7 @@ void PanasonicACWLAN::send_packet(std::vector<uint8_t> packet, CommandType type)
 
   for (uint8_t i : packet)  // Loop through payload to calculate checksum
   {
-    checksum += i;  // Add byte to checksum
+    checksum += i; // Add byte to checksum
   }
 
   checksum = (~checksum + 1);     // Compute checksum
@@ -748,7 +730,8 @@ void PanasonicACWLAN::handle_resend() {
   }
 }
 
-void PanasonicACWLAN::set_value(byte key, byte value) {
+void PanasonicACWLAN::set_value(uint8_t key, uint8_t value)
+{
   if (this->set_queue_index_ >= 15) {
     ESP_LOGE(TAG, "Set queue overflow");
     this->set_queue_index_ = 0;
