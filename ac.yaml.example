@@ -23,7 +23,7 @@ uart:
   parity: EVEN
 
 external_components:
-  source: github://jesserockz/esphome-panasonic-ac@external-component
+  source: github://DomiStyle/esphome-panasonic-ac@dev-cztacg1
   components: [panasonic_ac]
 
 
