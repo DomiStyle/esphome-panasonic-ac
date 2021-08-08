@@ -1,0 +1,10 @@
+/.esphome/
+**/.pioenvs/
+**/.piolibdeps/
+**/lib/
+**/src/
+**/platformio.ini
+.vscode/
+venv/
+builds/
+*.py[cod]
