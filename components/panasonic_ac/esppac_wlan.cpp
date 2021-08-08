@@ -338,7 +338,7 @@ std::string PanasonicACWLAN::determine_preset(uint8_t preset) {
     case 0x41:  // Normal
       return "Normal";
     default:
-      ESP_LOGW(TAG, "Received unknown fan power");
+      ESP_LOGW(TAG, "Received unknown preset");
       return "Normal";
   }
 }
@@ -502,7 +502,8 @@ void PanasonicACWLAN::handle_packet() {
         case 0xA0:  // Fan speed
           ESP_LOGV(TAG, "Received fan speed");
           this->custom_fan_mode = determine_fan_speed(this->rx_buffer_[currentIndex + 2]);
-        case 0xB2:
+          break;
+        case 0xB2: // Preset
           ESP_LOGV(TAG, "Received preset");
           this->custom_preset = determine_preset(this->rx_buffer_[currentIndex + 2]);
           break;
