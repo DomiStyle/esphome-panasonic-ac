@@ -78,6 +78,12 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   if (call.get_custom_fan_mode().has_value()) {
     ESP_LOGV(TAG, "Requested fan mode change");
 
+    if(this->custom_preset != "Normal")
+    {
+      ESP_LOGV(TAG, "Resetting preset");
+      this->data[5] = (this->data[5] & 0xF0);  // Clear right nib for normal mode
+    }
+
     std::string fanMode = *call.get_custom_fan_mode();
 
     if (fanMode == "Automatic")
@@ -118,29 +124,6 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
     }
   }
 
-  /*
-        if(call.get_preset().has_value())
-        {
-          ESP_LOGV(TAG, "Requested preset change");
-
-          switch(*call.get_preset())
-          {
-            case climate::CLIMATE_PRESET_NONE:
-              this->data[5] = (this->data[5] & 0xF0); // Clear right nib for normal mode
-            break;
-            case climate::CLIMATE_PRESET_BOOST:
-              this->data[5] = (this->data[5] & 0xF0) + 0x02; // Clear right nib and set powerful mode
-            break;
-            case climate::CLIMATE_PRESET_ECO:
-              this->data[5] = (this->data[5] & 0xF0) + 0x04; // Clear right nib and set quiet mode
-            break;
-            default:
-              ESP_LOGV(TAG, "Unsupported preset requested");
-            break;
-          }
-        }
-  */
-
   if (call.get_custom_preset().has_value()) {
     ESP_LOGV(TAG, "Requested preset change");
 
@@ -157,7 +140,6 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   }
 
   send_command(this->data, CommandType::Normal, CTRL_HEADER);
-  // set_data(false);
 }
 
 /*
@@ -195,7 +177,6 @@ void PanasonicACCNT::set_data(bool set) {
   this->update_swing_vertical(verticalSwing);
   this->update_swing_horizontal(horizontalSwing);
 
-  // this->preset = preset;
   this->custom_preset = preset;
 
   this->update_nanoex(nanoex);
@@ -211,17 +192,12 @@ void PanasonicACCNT::send_command(std::vector<uint8_t> command, CommandType type
   command.insert(command.begin(), header);
   command.insert(command.begin() + 1, length);
 
-  // memcpy(&packet[2], &command, commandLength); // Copy command to packet
-
   uint8_t checksum = 0;
 
   for (uint8_t i : command)
     checksum -= i;  // Add to checksum
 
   command.push_back(checksum);
-
-  // lastCommand = command; // Store the last command we sent
-  // lastCommandLength = commandLength; // Store the length of the last command we sent
 
   send_packet(command, type);  // Actually send the constructed packet
 }
@@ -262,16 +238,16 @@ bool PanasonicACCNT::verify_packet() {
     return false;
   }
 
-  if (this->rx_buffer_[0] != CTRL_HEADER && this->rx_buffer_[0] != POLL_HEADER)  // Check if header matches
-  {
+  // Check if header matches
+  if (this->rx_buffer_[0] != CTRL_HEADER && this->rx_buffer_[0] != POLL_HEADER) {
     ESP_LOGW(TAG, "Dropping invalid packet (header)");
 
     this->rx_buffer_.clear();  // Reset buffer
     return false;
   }
 
-  if (this->rx_buffer_[1] != this->rx_buffer_.size() - 3)  // Packet length minus header, packet length and checksum
-  {
+  // Packet length minus header, packet length and checksum
+  if (this->rx_buffer_[1] != this->rx_buffer_.size() - 3) {
     ESP_LOGD(TAG, "Dropping invalid packet (length mismatch)");
 
     this->rx_buffer_.clear();  // Reset buffer
