@@ -451,6 +451,12 @@ void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
     this->data[4] = (this->data[4] & 0x0F) + 0x20;
   else if (swing == "up")
     this->data[4] = (this->data[4] & 0x0F) + 0x10;
+  else if (swing == "auto")
+    this->data[4] = (this->data[4] & 0x0F) + 0xF0;
+  else {
+    ESP_LOGW(TAG, "Unsupported vertical swing position received");
+    return;
+  }
 
   send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
@@ -471,6 +477,12 @@ void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
     this->data[4] = (this->data[4] & 0xF0) + 0x0B;
   else if (swing == "right")
     this->data[4] = (this->data[4] & 0xF0) + 0x0C;
+  else if (swing == "auto")
+    this->data[4] = (this->data[4] & 0xF0) + 0x0D;
+  else {
+    ESP_LOGW(TAG, "Unsupported horizontal swing position received");
+    return;
+  }
 
   send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
