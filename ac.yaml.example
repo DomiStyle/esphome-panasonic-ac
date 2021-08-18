@@ -1,0 +1,52 @@
+esphome:
+  name: panasonic-ac
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  networks:
+  ap: {}
+
+logger:
+  level: DEBUG
+#  baud_rate: 0 # ESP8266 only
+
+api:
+
+ota:
+
+# Requires ESPHome 1.15.0+ for the even parity option
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  parity: EVEN
+
+external_components:
+  source: github://DomiStyle/esphome-panasonic-ac
+  components: [panasonic_ac]
+
+
+climate:
+  - platform: panasonic_ac
+    # For CZ-TACG1
+    # type: cnt
+
+    # For DNSK-P11
+    # type: wlan
+
+    name: Panasonic AC
+    horizontal_swing_select:
+      name: Panasonic AC Horizontal Swing Mode
+    vertical_swing_select:
+      name: Panasonic AC Vertical Swing Mode
+    outside_temperature:
+      name: Panasonic AC Outside Temperature
+
+    # Enable as needed
+    # eco_switch:
+    #   name: Panasonic AC Eco Switch
+    # nanoex_switch:
+    #   name: Panasonic AC NanoeX Switch
+    # mild_dry_switch:
+    #   name: Panasonic AC Mild Dry Switch
