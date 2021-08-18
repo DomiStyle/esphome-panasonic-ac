@@ -68,7 +68,6 @@ SCHEMA = climate.CLIMATE_SCHEMA.extend(
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
-        cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
@@ -84,6 +83,7 @@ CONFIG_SCHEMA = cv.typed_schema(
                 cv.GenerateID(): cv.declare_id(PanasonicACCNT),
                 cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
                 cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
+                cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
             }
         ),
     }
