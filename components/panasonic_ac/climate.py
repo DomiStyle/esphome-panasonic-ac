@@ -31,6 +31,7 @@ PanasonicACSelect = panasonic_ac_ns.class_(
 CONF_HORIZONTAL_SWING_SELECT = "horizontal_swing_select"
 CONF_VERTICAL_SWING_SELECT = "vertical_swing_select"
 CONF_OUTSIDE_TEMPERATURE = "outside_temperature"
+CONF_CURRENT_TEMPERATURE_SENSOR = "current_temperature_sensor"
 CONF_NANOEX_SWITCH = "nanoex_switch"
 CONF_ECO_SWITCH = "eco_switch"
 CONF_MILD_DRY_SWITCH = "mild_dry_switch"
@@ -67,6 +68,7 @@ SCHEMA = climate.CLIMATE_SCHEMA.extend(
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
+        cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
@@ -117,3 +119,7 @@ async def to_code(config):
             await cg.register_component(a_switch, conf)
             await switch.register_switch(a_switch, conf)
             cg.add(getattr(var, f"set_{s}")(a_switch))
+
+    if CONF_CURRENT_TEMPERATURE_SENSOR in config:
+        sens = await cg.get_variable(config[CONF_CURRENT_TEMPERATURE_SENSOR])
+        cg.add(var.set_current_temperature_sensor(sens))
