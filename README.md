@@ -24,7 +24,7 @@ Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial por
 * Soldering iron
 * Wires to solder from Logic converter to ESP
 * Heat shrink
-* ESPHome 1.20.1 or newer
+* ESPHome 2021.8.0 or newer
 * Home Assistant 2021.8.0 or newer
 
 # Notes
@@ -38,15 +38,9 @@ Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial por
 
 This software installation guide assumes some familiarity with ESPHome.
 
-* Pull this repository
-* Copy the `ac.yaml.example` one directory above and rename it to `ac.yaml` so your directory structure looks like this:
-```
-ac.yaml
-esphome-panasonic-ac/
-  esppac.cpp
-  ...
-```
-* Uncomment one of the lines on the bottom of the file depending on your adapter type
+* Pull this repository or copy the `ac.yaml.example` from the root folder
+* Rename the `ac.yaml.example` to `ac.yaml`
+* Uncomment the `type` field depending on which AC protocol you want to use
 * Adjust the `ac.yaml` to your needs
 * Connect your ESP
 * Run `esphome ac.yaml run` and choose your serial port (or do this via the Home Assistant UI)
@@ -58,14 +52,16 @@ esphome-panasonic-ac/
 Since Panasonic ACs support different features you can comment out the lines at the bottom of your `ac.yaml`:
 
 ```
-  // Enable as needed
-  // ac->set_nanoex_switch(id(ac01_nanoex_switch));
-  // ac->set_eco_switch(id(ac01_eco_switch));
-  // ac->set_mild_dry_switch(id(ac01_mild_dry_switch));
+  # Enable as needed
+  # eco_switch:
+  #   name: Panasonic AC Eco Switch
+  # nanoex_switch:
+  #   name: Panasonic AC NanoeX Switch
+  # mild_dry_switch:
+  #   name: Panasonic AC Mild Dry Switch
 ```
 
-In order to find out which features are supported by your AC, check the remote that came with it.
-To clean up the sensors in Home Assistant you can just delete them.
+In order to find out which features are supported by your AC, check the remote that came with it. Please note that eco switch and mild dry switch are not supported on DNSK-P11.
 
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 
