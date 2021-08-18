@@ -161,8 +161,11 @@ void PanasonicACCNT::set_data(bool set) {
 
   if (set)  // Also set current and outside temperature
   {
-    this->update_current_temperature((int8_t) this->rx_buffer_[18]);
-    this->update_outside_temperature((int8_t) this->rx_buffer_[19]);
+    if (this->current_temperature_sensor_ == nullptr)
+      this->update_current_temperature((int8_t)this->rx_buffer_[18]);
+
+    if (this->outside_temperature_sensor_ != nullptr)
+      this->update_outside_temperature((int8_t)this->rx_buffer_[19]);
   }
 
   if (verticalSwing == "auto" && horizontalSwing == "auto")

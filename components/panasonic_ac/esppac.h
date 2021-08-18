@@ -39,6 +39,8 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_eco_switch(switch_::Switch *eco_switch);
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
 
+  void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
+
   void setup() override;
   void loop() override;
 
@@ -49,6 +51,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   switch_::Switch *nanoex_switch_ = nullptr;              // Switch to toggle nanoeX on/off
   switch_::Switch *eco_switch_ = nullptr;                 // Switch to toggle eco mode on/off
   switch_::Switch *mild_dry_switch_ = nullptr;            // Switch to toggle mild dry mode on/off
+  sensor::Sensor *current_temperature_sensor_ = nullptr;  // Sensor to use for current temperature where AC does not report
 
   std::string vertical_swing_state_;
   std::string horizontal_swing_state_;

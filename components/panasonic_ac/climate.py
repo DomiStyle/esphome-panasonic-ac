@@ -31,6 +31,7 @@ PanasonicACSelect = panasonic_ac_ns.class_(
 CONF_HORIZONTAL_SWING_SELECT = "horizontal_swing_select"
 CONF_VERTICAL_SWING_SELECT = "vertical_swing_select"
 CONF_OUTSIDE_TEMPERATURE = "outside_temperature"
+CONF_CURRENT_TEMPERATURE_SENSOR = "current_temperature_sensor"
 CONF_NANOEX_SWITCH = "nanoex_switch"
 CONF_ECO_SWITCH = "eco_switch"
 CONF_MILD_DRY_SWITCH = "mild_dry_switch"
@@ -49,23 +50,24 @@ HORIZONTAL_SWING_OPTIONS = [
 
 VERTICAL_SWING_OPTIONS = ["auto", "up", "up_center", "center", "down_center", "down"]
 
+SWITCH_SCHEMA = switch.SWITCH_SCHEMA.extend(cv.COMPONENT_SCHEMA).extend(
+    {cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}
+)
+SELECT_SCHEMA = select.SELECT_SCHEMA.extend(
+    {cv.GenerateID(CONF_ID): cv.declare_id(PanasonicACSelect)}
+)
+
 SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
-        cv.Optional(CONF_HORIZONTAL_SWING_SELECT): select.SELECT_SCHEMA.extend(
-            {cv.GenerateID(CONF_ID): cv.declare_id(PanasonicACSelect)}
-        ),
-        cv.Optional(CONF_VERTICAL_SWING_SELECT): select.SELECT_SCHEMA.extend(
-            {cv.GenerateID(CONF_ID): cv.declare_id(PanasonicACSelect)}
-        ),
+        cv.Optional(CONF_HORIZONTAL_SWING_SELECT): SELECT_SCHEMA,
+        cv.Optional(CONF_VERTICAL_SWING_SELECT): SELECT_SCHEMA,
         cv.Optional(CONF_OUTSIDE_TEMPERATURE): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional(CONF_NANOEX_SWITCH): switch.SWITCH_SCHEMA.extend(
-            cv.COMPONENT_SCHEMA
-        ).extend({cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}),
+        cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
@@ -79,12 +81,9 @@ CONFIG_SCHEMA = cv.typed_schema(
         CONF_CNT: SCHEMA.extend(
             {
                 cv.GenerateID(): cv.declare_id(PanasonicACCNT),
-                cv.Optional(CONF_ECO_SWITCH): switch.SWITCH_SCHEMA.extend(
-                    cv.COMPONENT_SCHEMA
-                ).extend({cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}),
-                cv.Optional(CONF_MILD_DRY_SWITCH): switch.SWITCH_SCHEMA.extend(
-                    cv.COMPONENT_SCHEMA
-                ).extend({cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}),
+                cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
+                cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
+                cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
             }
         ),
     }
@@ -120,3 +119,7 @@ async def to_code(config):
             await cg.register_component(a_switch, conf)
             await switch.register_switch(a_switch, conf)
             cg.add(getattr(var, f"set_{s}")(a_switch))
+
+    if CONF_CURRENT_TEMPERATURE_SENSOR in config:
+        sens = await cg.get_variable(config[CONF_CURRENT_TEMPERATURE_SENSOR])
+        cg.add(var.set_current_temperature_sensor(sens))
