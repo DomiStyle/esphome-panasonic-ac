@@ -1,83 +1,17 @@
 # Upgrading from 1.x to 2.x
 
-ESPPAC 2.0 introduces support for the CZ-TACG1 wifi module but also comes with some breaking changes. In order to update your existing config to the new format you need to add the following:
+v2.0 introduces support for the CZ-TACG1 wifi module but also comes with many breaking changes. In order to update your existing config you will have to move your config over to the new external component format.
 
-## Add new switches
+The climate entity and all sensors and switches are now automatically exposed to Home Assistant.
+Take a look at [the new example file](ac.yaml.example) to see what has changed.
 
-Support for eco mode and mild dry was added, you need to add the latter 2 sensors:
+## Cleanup
 
-```
-switch:
-  - platform: template
-    id: ac01_nanoex_switch
-    name: ac01_nanoex_switch
-    optimistic: true
-  - platform: template
-    id: ac01_eco_switch
-    name: ac01_eco_switch
-    optimistic: true
-  - platform: template
-    id: ac01_mild_dry_switch
-    name: ac01_mild_dry_switch
-    optimistic: true
-```
+If you previously pulled the old version of this repository you may remove the `esphome-panasonic-ac` folder, the repo gets pulled automatically now.
 
-## Specify which protocol to use
+## Move from input_selects to select
 
-The previous `PanasonicAC` class has been replaced with `PanasonicACWLAN` and `PanasonicACCNT`. Choose the appropiate one, when upgrading from 1.x you want `PanasonicACWLAN`:
-
-```
-// For DNSK-P11
-auto ac = new ESPPAC::WLAN::PanasonicACWLAN(id(ac_uart));
-```
-
-## Add new sensor callbacks
-
-The new sensors need to be passed to the `PanasonicAC` class. Enable as appropiate for your AC:
-
-```
-// Enable as needed
-// ac->set_nanoex_switch(id(ac01_nanoex_switch));
-// ac->set_eco_switch(id(ac01_eco_switch));
-// ac->set_mild_dry_switch(id(ac01_mild_dry_switch));
-```
-
-## Replace input_selects with select
-
-The text sensors for manual tilt selection have been replaced with the new select element.
-
-Remove the entire `text_sensor` block from your config and add the new select integration:
-
-```
-  select:
-    - platform: template
-      id: ac01_vertical_swing
-      name: ac01_vertical_swing
-      optimistic: true
-      options:
-        - up
-        - up_center
-        - center
-        - down_center
-        - down
-    - platform: template
-      id: ac01_horizontal_swing
-      name: ac01_horizontal_swing
-      optimistic: true
-      options:
-        - left
-        - left_center
-        - center
-        - right_center
-        - right
-```
-
-The functions `set_vertical_swing_sensor` and `set_horizontal_swing_sensor` have been renamed:
-
-```
-  ac->set_vertical_swing_select(id(ac_cnt_vertical_swing));
-  ac->set_horizontal_swing_select(id(ac_cnt_horizontal_swing));
-```
+If you previously added any input_select entities in Home Assistant to control the manual swing position you may remove them. They are not used anymore.
 
 ## Update automations
 
