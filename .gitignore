@@ -8,3 +8,4 @@
 venv/
 builds/
 *.py[cod]
+.DS_Store
