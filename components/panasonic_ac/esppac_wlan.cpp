@@ -813,6 +813,25 @@ void PanasonicACWLAN::on_eco_change(bool state) {
   // send_set_command();
 }
 
+void PanasonicACWLAN::on_econavi_change(bool state) {
+  if (this->state_ != ACState::Ready)
+    return;
+
+  return;
+
+  // TODO: implement econavi
+
+  // if (state) {
+  //   ESP_LOGV(TAG, "Turning econavi on");
+  //   set_value(..., ...);  // econavi on
+  // } else {
+  //   ESP_LOGV(TAG, "Turning econavi off");
+  //   set_value(..., ...);  // econavi off
+  // }
+
+  // send_set_command();
+}
+
 void PanasonicACWLAN::on_mild_dry_change(bool state) {
   if (this->state_ != ACState::Ready)
     return;
