@@ -24,6 +24,7 @@ class PanasonicACCNT : public PanasonicAC {
   void on_vertical_swing_change(const std::string &swing) override;
   void on_nanoex_change(bool nanoex) override;
   void on_eco_change(bool eco) override;
+  void on_econavi_change(bool eco) override;
   void on_mild_dry_change(bool mild_dry) override;
 
   void setup() override;
@@ -53,6 +54,7 @@ class PanasonicACCNT : public PanasonicAC {
   std::string determine_preset(uint8_t preset);
   bool determine_preset_nanoex(uint8_t preset);
   bool determine_eco(uint8_t value);
+  bool determine_econavi(uint8_t value);
   bool determine_mild_dry(uint8_t value);
 };
 
