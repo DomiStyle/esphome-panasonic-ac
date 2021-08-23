@@ -32,6 +32,7 @@ class PanasonicACWLAN : public PanasonicAC {
   void on_vertical_swing_change(const std::string &swing) override;
   void on_nanoex_change(bool nanoex) override;
   void on_eco_change(bool eco) override;
+  void on_econavi_change(bool eco) override;
   void on_mild_dry_change(bool mild_dry) override;
 
   void setup() override;

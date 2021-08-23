@@ -155,6 +155,7 @@ void PanasonicACCNT::set_data(bool set) {
   std::string preset = determine_preset(this->data[5]);
   bool nanoex = determine_preset_nanoex(this->data[5]);
   bool eco = determine_eco(this->data[8]);
+  bool econavi = determine_econavi(this->data[5]);
   bool mildDry = determine_mild_dry(this->data[2]);
 
   this->update_target_temperature((int8_t) this->data[1]);
@@ -198,6 +199,7 @@ void PanasonicACCNT::set_data(bool set) {
 
   this->update_nanoex(nanoex);
   this->update_eco(eco);
+  this->update_econavi(econavi);
   this->update_mild_dry(mildDry);
 }
 
@@ -398,17 +400,13 @@ std::string PanasonicACCNT::determine_preset(uint8_t preset) {
 
   switch (nib) {
     case 0x02:
-      // return climate::CLIMATE_PRESET_BOOST;
       return "Powerful";
     case 0x04:
-      // return climate::CLIMATE_PRESET_ECO;
       return "Quiet";
     case 0x00:
-      // return climate::CLIMATE_PRESET_NONE;
       return "Normal";
     default:
       ESP_LOGW(TAG, "Received unknown preset");
-      // return climate::CLIMATE_PRESET_NONE;
       return "Normal";
   }
 }
@@ -433,6 +431,17 @@ bool PanasonicACCNT::determine_eco(uint8_t value) {
     return false;
   else {
     ESP_LOGW(TAG, "Received unknown eco value");
+    return false;
+  }
+}
+
+bool PanasonicACCNT::determine_econavi(uint8_t value) {
+  if (value == 0x10)
+    return true;
+  else if (value == 0x00)
+    return false;
+  else {
+    ESP_LOGW(TAG, "Received unknown econavi value");
     return false;
   }
 }
@@ -533,6 +542,23 @@ void PanasonicACCNT::on_eco_change(bool state) {
   } else {
     ESP_LOGV(TAG, "Turning eco mode off");
     this->data[8] = 0x00;
+  }
+
+  send_command(this->data, CommandType::Normal, CTRL_HEADER);
+}
+
+void PanasonicACCNT::on_econavi_change(bool state) {
+  if (this->state_ != ACState::Ready)
+    return;
+
+  this->econavi_state_ = state;
+
+  if (state) {
+    ESP_LOGV(TAG, "Turning econavi mode on");
+    this->data[5] = 0x10;
+  } else {
+    ESP_LOGV(TAG, "Turning econavi mode off");
+    this->data[5] = 0x00;
   }
 
   send_command(this->data, CommandType::Normal, CTRL_HEADER);

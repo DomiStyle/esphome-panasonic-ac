@@ -11,7 +11,7 @@ namespace esphome {
 
 namespace panasonic_ac {
 
-static const char *const VERSION = "2.0.0";
+static const char *const VERSION = "2.1.0";
 
 static const uint8_t BUFFER_SIZE = 128;  // The maximum size of a single packet (both receive and transmit)
 static const uint8_t READ_TIMEOUT = 20;  // The maximum time to wait before considering a packet complete
@@ -37,6 +37,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_horizontal_swing_select(select::Select *horizontal_swing_select);
   void set_nanoex_switch(switch_::Switch *nanoex_switch);
   void set_eco_switch(switch_::Switch *eco_switch);
+  void set_econavi_switch(switch_::Switch *econavi_switch);
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
 
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
@@ -50,6 +51,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   select::Select *horizontal_swing_select_ = nullptr;     // Select to store manual position of horizontal swing
   switch_::Switch *nanoex_switch_ = nullptr;              // Switch to toggle nanoeX on/off
   switch_::Switch *eco_switch_ = nullptr;                 // Switch to toggle eco mode on/off
+  switch_::Switch *econavi_switch_ = nullptr;                 // Switch to toggle econavi mode on/off
   switch_::Switch *mild_dry_switch_ = nullptr;            // Switch to toggle mild dry mode on/off
   sensor::Sensor *current_temperature_sensor_ = nullptr;  // Sensor to use for current temperature where AC does not report
 
@@ -58,6 +60,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   bool nanoex_state_ = false;    // Stores the state of nanoex to prevent duplicate packets
   bool eco_state_ = false;       // Stores the state of eco to prevent duplicate packets
+  bool econavi_state_ = false;       // Stores the state of econavi to prevent duplicate packets
   bool mild_dry_state_ = false;  // Stores the state of mild dry to prevent duplicate packets
 
   bool waiting_for_response_ = false;  // Set to true if we are waiting for a response
@@ -83,12 +86,14 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void update_swing_vertical(const std::string &swing);
   void update_nanoex(bool nanoex);
   void update_eco(bool eco);
+  void update_econavi(bool econavi);
   void update_mild_dry(bool mild_dry);
 
   virtual void on_horizontal_swing_change(const std::string &swing) = 0;
   virtual void on_vertical_swing_change(const std::string &swing) = 0;
   virtual void on_nanoex_change(bool nanoex) = 0;
   virtual void on_eco_change(bool eco) = 0;
+  virtual void on_econavi_change(bool econavi) = 0;
   virtual void on_mild_dry_change(bool mild_dry) = 0;
 
   climate::ClimateAction determine_action();
