@@ -129,19 +129,12 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
 
     std::string preset = *call.get_custom_preset();
 
-    // this is needed to go back to normal/powerful/quite if the initial state is ECONAVI
-    if(this->data[5] == 0x10) {
-      this->data[5] = 0x00;
-    }
-    
     if (preset.compare("Normal") == 0)
       this->data[5] = (this->data[5] & 0xF0);  // Clear right nib for normal mode
     else if (preset.compare("Powerful") == 0)
       this->data[5] = (this->data[5] & 0xF0) + 0x02;  // Clear right nib and set powerful mode
     else if (preset.compare("Quiet") == 0)
       this->data[5] = (this->data[5] & 0xF0) + 0x04;  // Clear right nib and set quiet mode
-    else if (preset.compare("ECONAVI") == 0)
-      this->data[5] = 0x10;
     else
       ESP_LOGV(TAG, "Unsupported preset requested");
   }
@@ -401,26 +394,17 @@ std::string PanasonicACCNT::determine_horizontal_swing(uint8_t swing) {
 }
 
 std::string PanasonicACCNT::determine_preset(uint8_t preset) {
-  uint8_t nib = (preset >> 0);
-  if(nib != 0x10) {
-    nib = nib & 0x0F;  // Right nib for preset (powerful/quiet)
-  } 
+  uint8_t nib = (preset >> 0) & 0x0F;  // Right nib for preset (powerful/quiet)
 
   switch (nib) {
     case 0x02:
-      // return climate::CLIMATE_PRESET_BOOST;
       return "Powerful";
     case 0x04:
-      // return climate::CLIMATE_PRESET_ECO;
       return "Quiet";
     case 0x00:
-      // return climate::CLIMATE_PRESET_NONE;
       return "Normal";
-    case 0x10:
-      return "ECONAVI";
     default:
       ESP_LOGW(TAG, "Received unknown preset");
-      // return climate::CLIMATE_PRESET_NONE;
       return "Normal";
   }
 }
@@ -545,6 +529,23 @@ void PanasonicACCNT::on_eco_change(bool state) {
   } else {
     ESP_LOGV(TAG, "Turning eco mode off");
     this->data[8] = 0x00;
+  }
+
+  send_command(this->data, CommandType::Normal, CTRL_HEADER);
+}
+
+void PanasonicACCNT::on_econavi_change(bool state) {
+  if (this->state_ != ACState::Ready)
+    return;
+
+  this->econavi_state_ = state;
+
+  if (state) {
+    ESP_LOGV(TAG, "Turning econavi mode on");
+    this->data[5] = 0x10;
+  } else {
+    ESP_LOGV(TAG, "Turning econavi mode off");
+    this->data[5] = 0x00;
   }
 
   send_command(this->data, CommandType::Normal, CTRL_HEADER);

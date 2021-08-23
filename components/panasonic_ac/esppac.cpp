@@ -26,7 +26,7 @@ climate::ClimateTraits PanasonicAC::traits() {
   traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_BOTH,
                                     climate::CLIMATE_SWING_VERTICAL, climate::CLIMATE_SWING_HORIZONTAL});
 
-  traits.set_supported_custom_presets({"Normal", "Powerful", "Quiet", "ECONAVI"});
+  traits.set_supported_custom_presets({"Normal", "Powerful", "Quiet"});
 
   return traits;
 }
@@ -121,6 +121,13 @@ void PanasonicAC::update_eco(bool eco) {
   }
 }
 
+void PanasonicAC::update_econavi(bool econavi) {
+  if (this->econavi_switch_ != nullptr) {
+    this->econavi_state_ = econavi;
+    this->econavi_switch_->publish_state(this->econavi_state_);
+  }
+}
+
 void PanasonicAC::update_mild_dry(bool mild_dry) {
   if (this->mild_dry_switch_ != nullptr) {
     this->mild_dry_state_ = mild_dry;
@@ -197,6 +204,15 @@ void PanasonicAC::set_eco_switch(switch_::Switch *eco_switch) {
     if (state == this->eco_state_)
       return;
     this->on_eco_change(state);
+  });
+}
+
+void PanasonicAC::set_econavi_switch(switch_::Switch *econavi_switch) {
+  this->econavi_switch_ = econavi_switch;
+  this->econavi_switch_->add_on_state_callback([this](bool state) {
+    if (state == this->econavi_state_)
+      return;
+    this->on_econavi_change(state);
   });
 }
 
