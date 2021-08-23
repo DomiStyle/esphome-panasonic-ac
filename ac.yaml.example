@@ -46,6 +46,8 @@ climate:
     # Enable as needed
     # eco_switch:
     #   name: Panasonic AC Eco Switch
+    # econavi_switch:
+    #   name: Panasonic AC Econavi Switch
     # nanoex_switch:
     #   name: Panasonic AC NanoeX Switch
     # mild_dry_switch:
