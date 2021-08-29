@@ -157,7 +157,7 @@ void PanasonicACCNT::set_data(bool set) {
   bool eco = determine_eco(this->data[8]);
   bool econavi = determine_econavi(this->data[5]);
   bool mildDry = determine_mild_dry(this->data[2]);
-
+  
   this->update_target_temperature((int8_t) this->data[1]);
 
   if (set) {
@@ -180,6 +180,11 @@ void PanasonicACCNT::set_data(bool set) {
         this->update_outside_temperature((int8_t)this->rx_buffer_[22]);
       else
         ESP_LOGV(TAG, "Outside temperature is not supported");
+    }
+
+    if(this->current_power_consumption_sensor_ != nullptr) {
+      uint16_t power_consumption = determine_power_consumption((int8_t)this->rx_buffer_[28], (int8_t)this->rx_buffer_[29], (int8_t)this->rx_buffer_[30]);
+      this->update_current_power_consumption(power_consumption);
     }
   }
 
@@ -455,6 +460,10 @@ bool PanasonicACCNT::determine_mild_dry(uint8_t value) {
     ESP_LOGW(TAG, "Received unknown mild dry value");
     return false;
   }
+}
+
+uint16_t PanasonicACCNT::determine_power_consumption(uint8_t byte_28, uint8_t multiplier, uint8_t offset) {
+  return (uint16_t)(byte_28 + (multiplier * 255)) - offset;
 }
 
 /*

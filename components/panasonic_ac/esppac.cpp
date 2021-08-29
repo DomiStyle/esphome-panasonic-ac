@@ -153,6 +153,13 @@ climate::ClimateAction PanasonicAC::determine_action() {
   }
 }
 
+void PanasonicAC::update_current_power_consumption(int16_t power) {
+  if (this->current_power_consumption_sensor_ != nullptr && this->current_power_consumption_sensor_->state != power) {
+    this->current_power_consumption_sensor_->publish_state(
+        power);  // Set current power consumption
+  }
+}
+
 /*
  * Sensor handling
  */
@@ -223,6 +230,10 @@ void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch) {
       return;
     this->on_mild_dry_change(state);
   });
+}
+
+void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor) {
+  this->current_power_consumption_sensor_ = current_power_consumption_sensor;
 }
 
 /*

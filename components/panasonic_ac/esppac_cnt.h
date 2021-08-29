@@ -56,6 +56,7 @@ class PanasonicACCNT : public PanasonicAC {
   bool determine_eco(uint8_t value);
   bool determine_econavi(uint8_t value);
   bool determine_mild_dry(uint8_t value);
+  uint16_t determine_power_consumption(uint8_t byte_28, uint8_t multiplier, uint8_t offset);
 };
 
 }  // namespace CNT

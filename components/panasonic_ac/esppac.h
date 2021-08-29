@@ -39,6 +39,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_eco_switch(switch_::Switch *eco_switch);
   void set_econavi_switch(switch_::Switch *econavi_switch);
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
+  void set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor);
 
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
 
@@ -46,14 +47,15 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void loop() override;
 
  protected:
-  sensor::Sensor *outside_temperature_sensor_ = nullptr;  // Sensor to store outside temperature from queries
-  select::Select *vertical_swing_select_ = nullptr;       // Select to store manual position of vertical swing
-  select::Select *horizontal_swing_select_ = nullptr;     // Select to store manual position of horizontal swing
-  switch_::Switch *nanoex_switch_ = nullptr;              // Switch to toggle nanoeX on/off
-  switch_::Switch *eco_switch_ = nullptr;                 // Switch to toggle eco mode on/off
-  switch_::Switch *econavi_switch_ = nullptr;                 // Switch to toggle econavi mode on/off
-  switch_::Switch *mild_dry_switch_ = nullptr;            // Switch to toggle mild dry mode on/off
-  sensor::Sensor *current_temperature_sensor_ = nullptr;  // Sensor to use for current temperature where AC does not report
+  sensor::Sensor *outside_temperature_sensor_ = nullptr;        // Sensor to store outside temperature from queries
+  select::Select *vertical_swing_select_ = nullptr;             // Select to store manual position of vertical swing
+  select::Select *horizontal_swing_select_ = nullptr;           // Select to store manual position of horizontal swing
+  switch_::Switch *nanoex_switch_ = nullptr;                    // Switch to toggle nanoeX on/off
+  switch_::Switch *eco_switch_ = nullptr;                       // Switch to toggle eco mode on/off
+  switch_::Switch *econavi_switch_ = nullptr;                   // Switch to toggle econavi mode on/off
+  switch_::Switch *mild_dry_switch_ = nullptr;                  // Switch to toggle mild dry mode on/off
+  sensor::Sensor *current_temperature_sensor_ = nullptr;        // Sensor to use for current temperature where AC does not report
+  sensor::Sensor *current_power_consumption_sensor_ = nullptr;  // Sensor to store current power consumption from queries
 
   std::string vertical_swing_state_;
   std::string horizontal_swing_state_;
@@ -88,6 +90,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void update_eco(bool eco);
   void update_econavi(bool econavi);
   void update_mild_dry(bool mild_dry);
+  void update_current_power_consumption(int16_t power);
 
   virtual void on_horizontal_swing_change(const std::string &swing) = 0;
   virtual void on_vertical_swing_change(const std::string &swing) = 0;
