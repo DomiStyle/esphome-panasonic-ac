@@ -59,11 +59,16 @@ Since Panasonic ACs support different features you can comment out the lines at 
   #   name: Panasonic AC NanoeX Switch
   # mild_dry_switch:
   #   name: Panasonic AC Mild Dry Switch
+  # econavi_switch:
+  #   name: Econavi switch
+  # current_power_consumption:
+  #   name: Panasonic AC Power Consumption
 ```
 
 In order to find out which features are supported by your AC, check the remote that came with it. Please note that eco switch and mild dry switch are not supported on DNSK-P11.
 
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
+**current_power_consumption is just as ESTIMATED value by the AC**
 
 ## Upgrading from 1.x to 2.x
 
