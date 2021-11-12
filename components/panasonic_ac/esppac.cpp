@@ -59,7 +59,7 @@ void PanasonicAC::read_data() {
   }
 }
 
-void PanasonicAC::update_outside_temperature(uint8_t temperature) {
+void PanasonicAC::update_outside_temperature(int8_t temperature) {
   if (temperature > TEMPERATURE_THRESHOLD) {
     ESP_LOGW(TAG, "Received out of range outside temperature: %d", temperature);
     return;
@@ -70,7 +70,7 @@ void PanasonicAC::update_outside_temperature(uint8_t temperature) {
         temperature);  // Set current (outside) temperature; no temperature steps
 }
 
-void PanasonicAC::update_current_temperature(uint8_t temperature) {
+void PanasonicAC::update_current_temperature(int8_t temperature) {
   if (temperature > TEMPERATURE_THRESHOLD) {
     ESP_LOGW(TAG, "Received out of range inside temperature: %d", temperature);
     return;

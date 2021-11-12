@@ -81,8 +81,8 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   void read_data();
 
-  void update_outside_temperature(uint8_t temperature);
-  void update_current_temperature(uint8_t temperature);
+  void update_outside_temperature(int8_t temperature);
+  void update_current_temperature(int8_t temperature);
   void update_target_temperature(uint8_t raw_value);
   void update_swing_horizontal(const std::string &swing);
   void update_swing_vertical(const std::string &swing);
