@@ -52,6 +52,8 @@ climate:
     #   name: Panasonic AC NanoeX Switch
     # mild_dry_switch:
     #   name: Panasonic AC Mild Dry Switch
+    # current_power_consumption:
+    #   name: Panasonic AC Power Consumption
 
     # Useful when the ac does not report a current temperature (CZ-TACG1 only)
     # current_temperature_sensor: temperature_sensor_id
