@@ -417,7 +417,7 @@ std::string PanasonicACCNT::determine_preset(uint8_t preset) {
 }
 
 bool PanasonicACCNT::determine_preset_nanoex(uint8_t preset) {
-  uint8_t nib = (preset >> 4) & 0x0F;  // Left nib for nanoex
+  uint8_t nib = (preset >> 4) & 0x04;  // Left nib for nanoex
 
   if (nib == 0x04)
     return true;
@@ -441,9 +441,11 @@ bool PanasonicACCNT::determine_eco(uint8_t value) {
 }
 
 bool PanasonicACCNT::determine_econavi(uint8_t value) {
-  if (value == 0x10)
+  uint8_t nib = & 0x10;
+  
+  if (nib == 0x10)
     return true;
-  else if (value == 0x00)
+  else if (nib == 0x00)
     return false;
   else {
     ESP_LOGW(TAG, "Received unknown econavi value");
