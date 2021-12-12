@@ -441,7 +441,7 @@ bool PanasonicACCNT::determine_eco(uint8_t value) {
 }
 
 bool PanasonicACCNT::determine_econavi(uint8_t value) {
-  uint8_t nib = & 0x10;
+  uint8_t nib = value & 0x10;
   
   if (nib == 0x10)
     return true;
