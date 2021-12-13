@@ -464,8 +464,8 @@ bool PanasonicACCNT::determine_mild_dry(uint8_t value) {
   }
 }
 
-uint16_t PanasonicACCNT::determine_power_consumption(uint8_t byte_28, uint8_t multiplier, uint8_t offset) {
-  return (uint16_t)(byte_28 + (multiplier * 255)) - offset;
+uint16_t PanasonicACCNT::determine_power_consumption(uint8_t byte_28, uint8_t byte_29, uint8_t offset) {
+  return (uint16_t)(byte_28 + (byte_29 * 256)) - offset;
 }
 
 /*
