@@ -12,7 +12,7 @@ An open source alternative for the Panasonic wi-fi adapter that works locally wi
 
 # Supported hardware
 
-This library works with both the CN-CNT port and the CN-WLAN port. CN-WLAN is only available on newer units.
+This library works with both the CN-CNT port and the CN-WLAN port. CN-WLAN is only available on newer units. Either port can be used on units that have both ports regardless of the usage of the other port (ie. it is possible to leave the DNSK-P11 connected to CN-WLAN and connect the ESP to CN-CNT). 
 
 Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial ports.
 
