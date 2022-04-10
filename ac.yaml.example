@@ -36,6 +36,7 @@ climate:
     # type: wlan
 
     name: Panasonic AC
+    # Comment out next two line if your unit does not have horizontal swing
     horizontal_swing_select:
       name: Panasonic AC Horizontal Swing Mode
     vertical_swing_select:
