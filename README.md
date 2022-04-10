@@ -19,7 +19,7 @@ Works on the ESP8266 but ESP32 is preferred for the multiple hardware serial por
 # Requirements
 
 * ESP32 (or ESP8266) ([supported by ESPHome](https://esphome.io/#devices))
-* 5V to 3.3V bi-directional Logic Converter (minimum 2 channels, available as pre-soldered prototyping boards)
+* 5V to 3.3V bi-directional Logic Converter (Minimum 2 channels, available as pre-soldered prototyping boards. Note that by getting an ESP32-DevKitC V4 board there's no need for external logic converters.)
 * Female-Female Jumper cables
 * Soldering iron
 * Wires to solder from Logic converter to ESP
