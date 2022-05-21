@@ -242,9 +242,9 @@ void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_p
 
 void PanasonicAC::log_packet(std::vector<uint8_t> data, bool outgoing) {
   if (outgoing) {
-    ESP_LOGV(TAG, "TX: %s", hexencode(data).c_str());
+    ESP_LOGV(TAG, "TX: %s", format_hex_pretty(data).c_str());
   } else {
-    ESP_LOGV(TAG, "RX: %s", hexencode(data).c_str());
+    ESP_LOGV(TAG, "RX: %s", format_hex_pretty(data).c_str());
   }
 }
 
