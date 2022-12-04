@@ -357,7 +357,7 @@ std::string PanasonicACCNT::determine_vertical_swing(uint8_t swing) {
 
   switch (nib) {
     case 0x0E:
-      return "moving";
+      return "swing";
     case 0x0F:
       return "auto";
     case 0x01:
@@ -490,7 +490,7 @@ void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
     this->data[4] = (this->data[4] & 0x0F) + 0x20;
   else if (swing == "up")
     this->data[4] = (this->data[4] & 0x0F) + 0x10;
-  else if (swing == "moving")
+  else if (swing == "swing")
     this->data[4] = (this->data[4] & 0x0F) + 0xE0;
   else if (swing == "auto")
     this->data[4] = (this->data[4] & 0x0F) + 0xF0;
