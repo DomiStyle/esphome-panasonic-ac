@@ -371,7 +371,7 @@ std::string PanasonicACCNT::determine_vertical_swing(uint8_t swing) {
     case 0x00:
       return "unsupported";
     default:
-      ESP_LOGW(TAG, "Received unknown vertical swing mode");
+      ESP_LOGW(TAG, "Received unknown vertical swing mode: 0x%02X", nib);
       return "Unknown";
   }
 }
