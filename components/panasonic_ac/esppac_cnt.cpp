@@ -43,27 +43,31 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   if (this->state_ != ACState::Ready)
     return;
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   if (call.get_mode().has_value()) {
     ESP_LOGV(TAG, "Requested mode change");
 
     switch (*call.get_mode()) {
       case climate::CLIMATE_MODE_COOL:
-        this->data[0] = 0x34;
+        this->cmd[0] = 0x34;
         break;
       case climate::CLIMATE_MODE_HEAT:
-        this->data[0] = 0x44;
+        this->cmd[0] = 0x44;
         break;
       case climate::CLIMATE_MODE_DRY:
-        this->data[0] = 0x24;
+        this->cmd[0] = 0x24;
         break;
       case climate::CLIMATE_MODE_HEAT_COOL:
-        this->data[0] = 0x04;
+        this->cmd[0] = 0x04;
         break;
       case climate::CLIMATE_MODE_FAN_ONLY:
-        this->data[0] = 0x64;
+        this->cmd[0] = 0x64;
         break;
       case climate::CLIMATE_MODE_OFF:
-        this->data[0] = this->data[0] & 0xF0;  // Strip right nib to turn AC off
+        this->cmd[0] = this->cmd[0] & 0xF0;  // Strip right nib to turn AC off
         break;
       default:
         ESP_LOGV(TAG, "Unsupported mode requested");
@@ -72,7 +76,7 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   }
 
   if (call.get_target_temperature().has_value()) {
-    this->data[1] = *call.get_target_temperature() / TEMPERATURE_STEP;
+    this->cmd[1] = *call.get_target_temperature() / TEMPERATURE_STEP;
   }
 
   if (call.get_custom_fan_mode().has_value()) {
@@ -81,23 +85,23 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
     if(this->custom_preset != "Normal")
     {
       ESP_LOGV(TAG, "Resetting preset");
-      this->data[5] = (this->data[5] & 0xF0);  // Clear right nib for normal mode
+      this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
     }
 
     std::string fanMode = *call.get_custom_fan_mode();
 
     if (fanMode == "Automatic")
-      this->data[3] = 0xA0;
+      this->cmd[3] = 0xA0;
     else if (fanMode == "1")
-      this->data[3] = 0x30;
+      this->cmd[3] = 0x30;
     else if (fanMode == "2")
-      this->data[3] = 0x40;
+      this->cmd[3] = 0x40;
     else if (fanMode == "3")
-      this->data[3] = 0x50;
+      this->cmd[3] = 0x50;
     else if (fanMode == "4")
-      this->data[3] = 0x60;
+      this->cmd[3] = 0x60;
     else if (fanMode == "5")
-      this->data[3] = 0x70;
+      this->cmd[3] = 0x70;
     else
       ESP_LOGV(TAG, "Unsupported fan mode requested");
   }
@@ -107,16 +111,16 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
 
     switch (*call.get_swing_mode()) {
       case climate::CLIMATE_SWING_BOTH:
-        this->data[4] = 0xFD;
+        this->cmd[4] = 0xFD;
         break;
       case climate::CLIMATE_SWING_OFF:
-        this->data[4] = 0x36;  // Reset both to center
+        this->cmd[4] = 0x36;  // Reset both to center
         break;
       case climate::CLIMATE_SWING_VERTICAL:
-        this->data[4] = 0xF6;  // Swing vertical, horizontal center
+        this->cmd[4] = 0xF6;  // Swing vertical, horizontal center
         break;
       case climate::CLIMATE_SWING_HORIZONTAL:
-        this->data[4] = 0x3D;  // Swing horizontal, vertical center
+        this->cmd[4] = 0x3D;  // Swing horizontal, vertical center
         break;
       default:
         ESP_LOGV(TAG, "Unsupported swing mode requested");
@@ -130,16 +134,15 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
     std::string preset = *call.get_custom_preset();
 
     if (preset.compare("Normal") == 0)
-      this->data[5] = (this->data[5] & 0xF0);  // Clear right nib for normal mode
+      this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
     else if (preset.compare("Powerful") == 0)
-      this->data[5] = (this->data[5] & 0xF0) + 0x02;  // Clear right nib and set powerful mode
+      this->cmd[5] = (this->cmd[5] & 0xF0) + 0x02;  // Clear right nib and set powerful mode
     else if (preset.compare("Quiet") == 0)
-      this->data[5] = (this->data[5] & 0xF0) + 0x04;  // Clear right nib and set quiet mode
+      this->cmd[5] = (this->cmd[5] & 0xF0) + 0x04;  // Clear right nib and set quiet mode
     else
       ESP_LOGV(TAG, "Unsupported preset requested");
   }
 
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 /*
@@ -247,6 +250,14 @@ void PanasonicACCNT::handle_poll() {
   if (millis() - this->last_packet_sent_ > POLL_INTERVAL) {
     ESP_LOGV(TAG, "Polling AC");
     send_command(CMD_POLL, CommandType::Normal, POLL_HEADER);
+  }
+}
+
+void PanasonicACCNT::handle_cmd() {
+  if (!this->cmd.empty() && millis() - this->last_packet_sent_ > CMD_INTERVAL) {
+    ESP_LOGV(TAG, "Sending Command");
+    send_command(this->cmd, CommandType::Normal, CTRL_HEADER);
+    this->cmd.clear();
   }
 }
 
@@ -480,26 +491,29 @@ void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
 
   ESP_LOGD(TAG, "Setting vertical swing position");
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   if (swing == "down")
-    this->data[4] = (this->data[4] & 0x0F) + 0x50;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0x50;
   else if (swing == "down_center")
-    this->data[4] = (this->data[4] & 0x0F) + 0x40;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0x40;
   else if (swing == "center")
-    this->data[4] = (this->data[4] & 0x0F) + 0x30;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0x30;
   else if (swing == "up_center")
-    this->data[4] = (this->data[4] & 0x0F) + 0x20;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0x20;
   else if (swing == "up")
-    this->data[4] = (this->data[4] & 0x0F) + 0x10;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0x10;
   else if (swing == "swing")
-    this->data[4] = (this->data[4] & 0x0F) + 0xE0;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0xE0;
   else if (swing == "auto")
-    this->data[4] = (this->data[4] & 0x0F) + 0xF0;
+    this->cmd[4] = (this->cmd[4] & 0x0F) + 0xF0;
   else {
     ESP_LOGW(TAG, "Unsupported vertical swing position received");
     return;
   }
 
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
@@ -508,92 +522,105 @@ void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
 
   ESP_LOGD(TAG, "Setting horizontal swing position");
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   if (swing == "left")
-    this->data[4] = (this->data[4] & 0xF0) + 0x09;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x09;
   else if (swing == "left_center")
-    this->data[4] = (this->data[4] & 0xF0) + 0x0A;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x0A;
   else if (swing == "center")
-    this->data[4] = (this->data[4] & 0xF0) + 0x06;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x06;
   else if (swing == "right_center")
-    this->data[4] = (this->data[4] & 0xF0) + 0x0B;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x0B;
   else if (swing == "right")
-    this->data[4] = (this->data[4] & 0xF0) + 0x0C;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x0C;
   else if (swing == "auto")
-    this->data[4] = (this->data[4] & 0xF0) + 0x0D;
+    this->cmd[4] = (this->cmd[4] & 0xF0) + 0x0D;
   else {
     ESP_LOGW(TAG, "Unsupported horizontal swing position received");
     return;
   }
 
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 void PanasonicACCNT::on_nanoex_change(bool state) {
   if (this->state_ != ACState::Ready)
     return;
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   this->nanoex_state_ = state;
 
   if (state) {
     ESP_LOGV(TAG, "Turning nanoex on");
-    this->data[5] = (this->data[5] & 0x0F) + 0x40;
+    this->cmd[5] = (this->cmd[5] & 0x0F) + 0x40;
   } else {
     ESP_LOGV(TAG, "Turning nanoex off");
-    this->data[5] = (this->data[5] & 0x0F);
+    this->cmd[5] = (this->cmd[5] & 0x0F);
   }
-
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 void PanasonicACCNT::on_eco_change(bool state) {
   if (this->state_ != ACState::Ready)
     return;
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   this->eco_state_ = state;
 
   if (state) {
     ESP_LOGV(TAG, "Turning eco mode on");
-    this->data[8] = 0x40;
+    this->cmd[8] = 0x40;
   } else {
     ESP_LOGV(TAG, "Turning eco mode off");
-    this->data[8] = 0x00;
+    this->cmd[8] = 0x00;
   }
-
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 void PanasonicACCNT::on_econavi_change(bool state) {
   if (this->state_ != ACState::Ready)
     return;
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   this->econavi_state_ = state;
 
   if (state) {
     ESP_LOGV(TAG, "Turning econavi mode on");
-    this->data[5] = 0x10;
+    this->cmd[5] = 0x10;
   } else {
     ESP_LOGV(TAG, "Turning econavi mode off");
-    this->data[5] = 0x00;
+    this->cmd[5] = 0x00;
   }
 
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 void PanasonicACCNT::on_mild_dry_change(bool state) {
   if (this->state_ != ACState::Ready)
     return;
 
+  if (this->cmd.empty()) {
+    this->cmd = this->data;
+  }
+
   this->mild_dry_state_ = state;
 
   if (state) {
     ESP_LOGV(TAG, "Turning mild dry on");
-    this->data[2] = 0x7F;
+    this->cmd[2] = 0x7F;
   } else {
     ESP_LOGV(TAG, "Turning mild dry off");
-    this->data[2] = 0x80;
+    this->cmd[2] = 0x80;
   }
 
-  send_command(this->data, CommandType::Normal, CTRL_HEADER);
 }
 
 }  // namespace CNT

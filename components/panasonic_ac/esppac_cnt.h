@@ -10,6 +10,7 @@ static const uint8_t CTRL_HEADER = 0xF0;  // The header for control frames
 static const uint8_t POLL_HEADER = 0x70;  // The header for the poll command
 
 static const int POLL_INTERVAL = 5000;  // The interval at which to poll the AC
+static const int CMD_INTERVAL = 250;  // The interval at which to send commands
 
 enum class ACState {
   Initializing,  // Before first query response is receive
@@ -35,7 +36,10 @@ class PanasonicACCNT : public PanasonicAC {
 
   // uint8_t data[10];
   std::vector<uint8_t> data = std::vector<uint8_t>(10);  // Stores the data received from the AC
+  std::vector<uint8_t> cmd;  // Used to build next command
+
   void handle_poll();
+  void handle_cmd();
 
   void set_data(bool set);
 
