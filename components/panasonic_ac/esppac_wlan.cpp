@@ -646,6 +646,10 @@ void PanasonicACWLAN::send_set_command() {
     packet[12 + (i * 4) + 3] =
         0x00;  // Unknown, either 0x00 or 0x01 or 0x02; overwritten by checksum on last key value pair
   }
+  
+  if (packet[12] == 0x31) {
+  packet[11] = 0x02;
+  }
 
   send_packet(packet, CommandType::Normal);
   this->set_queue_index_ = 0;
