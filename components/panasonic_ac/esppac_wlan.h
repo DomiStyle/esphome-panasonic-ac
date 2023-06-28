@@ -13,7 +13,7 @@ static const int INIT_END_TIMEOUT = 10000;   // Time to wait for last handshake 
 static const int FIRST_POLL_TIMEOUT = 650;   // Time to wait before requesting the first poll
 static const int POLL_INTERVAL = 30000;      // The interval at which to poll the AC
 static const int RESPONSE_TIMEOUT = 600;     // The timeout after which we expect a response to our last command
-static const int INIT_FAIL_TIMEOUT = 30000;  // The timeout after which the initialization is considered failed
+static const int INIT_FAIL_TIMEOUT = 300000;  // The timeout after which the initialization is considered failed
 
 enum class ACState {
   Initializing,     // Before first handshake packet is sent
