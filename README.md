@@ -4,6 +4,7 @@ An open source alternative for the Panasonic wi-fi adapter that works locally wi
 
 # Features
 
+* NEW: Support Ethera generation ACs
 * Control your AC locally via Home Assistant, MQTT or directly
 * Instantly control the AC without any delay like in the Comfort Cloud app
 * Receive live reports and state from the AC
