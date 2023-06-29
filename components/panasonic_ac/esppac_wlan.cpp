@@ -597,8 +597,8 @@ void PanasonicACWLAN::handle_handshake_packet() {
   } else if (this->rx_buffer_[2] == 0x10 && this->rx_buffer_[3] == 0x88)  // Answer for handshake 13
   {
     // Ignore
-    ESP_LOGD(TAG, "Ignoring handshake [13/16]");
-    this->state_ = ACState::Initializing;  // restart init
+    ESP_LOGD(TAG, "Ignoring handshake [13/16] and Restarting Initialization");
+    this->state_ = ACState::Initializing;  // Restart Initialization, otherwise hangs here. Likely to succeed on 2nd attempt.
   } else if (this->rx_buffer_[2] == 0x01 &&
              this->rx_buffer_[3] == 0x09)  // First unsolicited packet from AC containing rx counter
   {
