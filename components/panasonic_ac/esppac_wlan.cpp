@@ -594,9 +594,9 @@ void PanasonicACWLAN::handle_handshake_packet() {
   {
     ESP_LOGD(TAG, "Answering handshake [12/16]");
     send_command(CMD_HANDSHAKE_13, sizeof(CMD_HANDSHAKE_13));
-  } else if (this->rx_buffer_[15] == 0x5A)  // Ethera generation devices handshake failure
+  } else if (this->rx_buffer_[14] == 0x83 && this->rx_buffer_[15] == 0x5A)  // Ethera generation devices handshake failure
   {
-    ESP_LOGD(TAG, "Initialization failed, restarting init");
+    ESP_LOGD(TAG, "Received 83 5A packet, Initialization failed, restarting init");
     this->state_ = ACState::Initializing;  // Restart Initialization, otherwise hangs here on ethera. Likely to succeed on 2nd attempt.
   } else if (this->rx_buffer_[2] == 0x10 && this->rx_buffer_[3] == 0x88)  // Answer for handshake 13
   {
