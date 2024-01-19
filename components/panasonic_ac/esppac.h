@@ -8,7 +8,6 @@
 #include "esphome/core/component.h"
 
 namespace esphome {
-
 namespace panasonic_ac {
 
 static const char *const VERSION = "2.4.0";
@@ -81,6 +80,13 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   void read_data();
 
+  uint8_t mode_state_ = 255;
+  uint8_t current_temperature_state_ = 255;
+  uint8_t target_temperature_state_ = 255;
+  esphome::optional<std::basic_string<char>> fan_mode_state_ = esphome::optional<std::basic_string<char>>("");
+  uint8_t swing_mode_state_ = 255;
+  esphome::optional<std::basic_string<char>> preset_state_ = esphome::optional<std::basic_string<char>>("");
+  
   void update_outside_temperature(int8_t temperature);
   void update_current_temperature(int8_t temperature);
   void update_target_temperature(uint8_t raw_value);

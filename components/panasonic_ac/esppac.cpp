@@ -173,8 +173,10 @@ void PanasonicAC::set_current_temperature_sensor(sensor::Sensor *current_tempera
   this->current_temperature_sensor_ = current_temperature_sensor;
   this->current_temperature_sensor_->add_on_state_callback([this](float state)
                                                            {
-                                                             this->current_temperature = state;
-                                                             this->publish_state();
+                                                             if (this->current_temperature != state) {
+                                                               this->current_temperature = state;
+                                                               this->current_temperature_sensor_->publish_state(state);
+                                                             }
                                                            });
 }
 
