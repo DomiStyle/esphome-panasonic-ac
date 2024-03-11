@@ -1,6 +1,6 @@
 #include "esppac.h"
 #include "esphome/core/log.h"
-#include "tz.h"
+#include "esphome/core/time.h"
 
 namespace esphome {
 namespace panasonic_ac {
@@ -43,8 +43,7 @@ void PanasonicAC::setup() {
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
-  using namespace std::chrono;
-  auto time = zoned_time{current_zone(), system_clock::now()};
+  auto time = ESPTime;
   ESP_LOGD(TAG, 'Time: %d', time.second);
 }
 
