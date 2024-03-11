@@ -160,9 +160,9 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
       this->current_power_consumption_sensor_->publish_state(power);  // Set current power consumption
     }
     if (this->today_power_consumption_sensor_ != nullptr) {
-      double oldConsumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+      double oldConsumption = std::round(this->today_consumption * 100.0) / 100.0; // Only send update every 10 Watt hours
       this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
-      double consumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+      double consumption = std::round(this->today_consumption * 100.0) / 100.0;
       if (consumption != oldConsumption) {
         this->today_power_consumption_sensor_->publish_state(this->today_consumption);  // Set today power consumption
       }
