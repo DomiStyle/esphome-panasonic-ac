@@ -1,6 +1,6 @@
 #include "esppac.h"
-#include "time.h"
 #include "esphome/core/log.h"
+#include <real_time_clock.h>
 
 namespace esphome {
 namespace panasonic_ac {
@@ -43,9 +43,9 @@ void PanasonicAC::setup() {
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
-  auto time = id(sntp_time).now();
+  ESPTime time = esphome::time::RealTimeClock::now()
 
-  ESP_LOGD(TAG, 'Time: %d', time.seconds);
+  ESP_LOGD(TAG, 'Time: %d', time.second);
 }
 
 void PanasonicAC::read_data() {
