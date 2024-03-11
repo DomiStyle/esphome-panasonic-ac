@@ -1,6 +1,6 @@
 #include "esppac.h"
 #include "esphome/core/log.h"
-#include <real_time_clock.h>
+#include "esphome/core/real_time_clock.h"
 
 namespace esphome {
 namespace panasonic_ac {
