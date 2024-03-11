@@ -158,10 +158,10 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
     if (this->current_power_consumption_sensor_->state != power) {
       this->current_power_consumption_sensor_->publish_state(
           power);  // Set current power consumption
-    this->today_consumption += ((this->last_read_ - this->last_kWh_) / 3600000)
+    this->today_consumption += ((this->last_read_ - this->last_kWh_) / 3600000);
     this->today_power_consumption_sensor_->publish_state(
         this->today_consumption);  // Set current power consumption
-    this->last_kWh_ = this->last_read_
+    this->last_kWh_ = this->last_read_;
     }
   }
 }
