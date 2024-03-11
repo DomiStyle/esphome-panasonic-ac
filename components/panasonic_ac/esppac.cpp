@@ -244,6 +244,10 @@ void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_p
   this->current_power_consumption_sensor_ = current_power_consumption_sensor;
 }
 
+void PanasonicAC::set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor) {
+  this->today_power_consumption_sensor_ = today_power_consumption_sensor;
+}
+
 /*
  * Debugging
  */
