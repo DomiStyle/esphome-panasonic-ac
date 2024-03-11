@@ -34,7 +34,7 @@ climate::ClimateTraits PanasonicAC::traits() {
 void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
-  this->last_kWh_ = this->init_time_
+  this->last_kWh_ = this->init_time_;
   this->last_packet_sent_ = millis();
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
