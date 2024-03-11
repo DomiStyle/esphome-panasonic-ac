@@ -1,8 +1,5 @@
 #include "esppac.h"
-#include <chrono>
-
-using namespace std::chrono;
-
+#include "time.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -46,12 +43,9 @@ void PanasonicAC::setup() {
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
-  auto utc_now = floor<seconds>(system_clock::now());
-  auto local_now = zoned_time{current_zone(), utc_now}.get_local_time();
-  auto local_midnight = floor<days>(local_now);
-  auto delta = local_now - local_midnight;
+  auto time = id(sntp_time).now();
 
-  ESP_LOGD(TAG, 'Time: %d', delta)
+  ESP_LOGD(TAG, 'Time: %d', time.seconds);
 }
 
 void PanasonicAC::read_data() {
