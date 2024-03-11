@@ -146,5 +146,11 @@ async def to_code(config):
         cg.add(var.set_current_temperature_sensor(sens))
 
     if CONF_CURRENT_POWER_CONSUMPTION in config:
+        log.info('current')
         sens = await sensor.new_sensor(config[CONF_CURRENT_POWER_CONSUMPTION])
         cg.add(var.set_current_power_consumption_sensor(sens))
+
+    if CONF_TODAY_POWER_CONSUMPTION in config:
+        log.info('today')
+        sens = await sensor.new_sensor(config[CONF_TODAY_POWER_CONSUMPTION])
+        cg.add(var.set_today_power_consumption_sensor(sens))

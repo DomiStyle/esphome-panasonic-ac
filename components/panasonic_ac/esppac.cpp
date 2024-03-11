@@ -245,12 +245,10 @@ void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch) {
 }
 
 void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor) {
-  ESP_LOGD(TAG, "Set power to %d", current_power_consumption_sensor);
   this->current_power_consumption_sensor_ = current_power_consumption_sensor;
 }
 
 void PanasonicAC::set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor) {
-  ESP_LOGD(TAG, "Set today power to %d", today_power_consumption_sensor);
   this->today_power_consumption_sensor_ = today_power_consumption_sensor;
 }
 

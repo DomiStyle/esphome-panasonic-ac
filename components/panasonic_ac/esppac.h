@@ -73,7 +73,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   uint32_t init_time_;             // Stores the current time
   uint32_t last_read_;             // Stores the time at which the last read was done
-  uint32_t last_kWh_;              // Stores the time at which the last power calculation was done
+  uint32_t last_kWh_;              // Stores the time at which the last energy calculation was done
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
