@@ -57,7 +57,7 @@ void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
   auto time = ESPTime();
-  ESP_LOGD(TAG, 'Time: %d', day_seconds());
+  ESP_LOGD(TAG, 'Time: %s', day_seconds());
 }
 
 void PanasonicAC::read_data() {
