@@ -161,7 +161,7 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
           power);  // Set current power consumption
     }
       this->today_consumption += ((this->last_read_ - this->last_kWh_) / 3600000);
-      ESP_LOGD(TAG, "Consumption: %d", this->today_consumption);
+      ESP_LOGD(TAG, "Consumption: %.3f", this->today_consumption);
     if (this->today_power_consumption_sensor_ != nullptr) {
       this->today_power_consumption_sensor_->publish_state(
           this->today_consumption);  // Set current power consumption
