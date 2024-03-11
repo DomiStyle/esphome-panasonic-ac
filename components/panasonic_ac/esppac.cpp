@@ -1,4 +1,7 @@
 #include "esppac.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 #include "esphome/core/log.h"
 
@@ -42,6 +45,13 @@ void PanasonicAC::setup() {
 
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
+
+  auto utc_now = floor<seconds>(system_clock::now());
+  auto local_now = zoned_time{current_zone(), utc_now}.get_local_time();
+  auto local_midnight = floor<days>(local_now);
+  auto delta = local_now - local_midnight;
+
+  ESP_LOGD(TAG, 'Time: %d', delta)
 }
 
 void PanasonicAC::read_data() {
@@ -160,9 +170,9 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
       this->current_power_consumption_sensor_->publish_state(power);  // Set current power consumption
     }
     if (this->today_power_consumption_sensor_ != nullptr) {
-      double oldConsumption = std::round(this->today_consumption * 100.0) / 100.0; // Only send update every 10 Watt hours
+      double oldConsumption = std::round(this->today_consumption * 1000.0) / 1000.0;
       this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
-      double consumption = std::round(this->today_consumption * 100.0) / 100.0;
+      double consumption = std::round(this->today_consumption * 1000.0) / 1000.0;
       if (consumption != oldConsumption) {
         this->today_power_consumption_sensor_->publish_state(this->today_consumption);  // Set today power consumption
       }
