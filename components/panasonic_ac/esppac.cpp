@@ -157,16 +157,17 @@ climate::ClimateAction PanasonicAC::determine_action() {
 void PanasonicAC::update_current_power_consumption(int16_t power) {
   if (this->current_power_consumption_sensor_ != nullptr) {
     if (this->current_power_consumption_sensor_->state != power) {
-      this->current_power_consumption_sensor_->publish_state(
-          power);  // Set current power consumption
+      this->current_power_consumption_sensor_->publish_state(power);  // Set current power consumption
     }
-      this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
-      ESP_LOGD(TAG, "Consumption: %.3f, %d", this->today_consumption, this->today_power_consumption_sensor_);
     if (this->today_power_consumption_sensor_ != nullptr) {
-      this->today_power_consumption_sensor_->publish_state(
-          this->today_consumption);  // Set current power consumption
-    }
+      oldConsumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+       this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
+      consumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+      if consumption != oldConsumption {
+        this->today_power_consumption_sensor_->publish_state(this->today_consumption);  // Set today power consumption
+      }
       this->last_kWh_ = this->last_read_;
+    }
   }
 }
 
