@@ -77,7 +77,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
-  float today_consumption = 0;     // Cumulative kWh
+  double today_consumption = 0;    // Cumulative kWh
   
   climate::ClimateTraits traits() override;
 
