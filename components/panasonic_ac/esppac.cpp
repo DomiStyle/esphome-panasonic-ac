@@ -43,7 +43,7 @@ void PanasonicAC::setup() {
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
-  ESPTime time = esphome::time::now()
+  ESPTime time = now()
 
   ESP_LOGD(TAG, 'Time: %d', time.second);
 }
