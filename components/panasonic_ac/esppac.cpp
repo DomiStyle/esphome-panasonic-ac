@@ -1,6 +1,7 @@
 #include "esppac.h"
 #include "esphome/core/log.h"
 #include "esphome/core/time.h"
+#include "ctime"
 
 namespace esphome {
 namespace panasonic_ac {
