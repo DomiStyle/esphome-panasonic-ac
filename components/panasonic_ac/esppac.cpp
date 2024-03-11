@@ -158,9 +158,9 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
     if (this->current_power_consumption_sensor_->state != power) {
       this->current_power_consumption_sensor_->publish_state(
           power);  // Set current power consumption
-    this->today_consumption += ((this->last_read_ - this->last_kWh_) / 3600000);
-    this->today_power_consumption_sensor_->publish_state(
-        this->today_consumption);  // Set current power consumption
+    //this->today_consumption += ((this->last_read_ - this->last_kWh_) / 3600000);
+    //this->today_power_consumption_sensor_->publish_state(
+    //    this->today_consumption);  // Set current power consumption
     this->last_kWh_ = this->last_read_;
     }
   }
@@ -178,12 +178,12 @@ void PanasonicAC::set_current_temperature_sensor(sensor::Sensor *current_tempera
 {
   this->current_temperature_sensor_ = current_temperature_sensor;
   this->current_temperature_sensor_->add_on_state_callback([this](float state)
-                                                           {
-                                                             if (this->current_temperature != state) {
-                                                               this->current_temperature = state;
-                                                               this->current_temperature_sensor_->publish_state(state);
-                                                             }
-                                                           });
+        {
+          if (this->current_temperature != state) {
+            this->current_temperature = state;
+            this->current_temperature_sensor_->publish_state(state);
+          }
+        });
 }
 
 void PanasonicAC::set_vertical_swing_select(select::Select *vertical_swing_select) {

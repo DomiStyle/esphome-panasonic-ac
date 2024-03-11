@@ -40,7 +40,6 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
   void set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor);
   void set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor);
-
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
 
   void setup() override;
