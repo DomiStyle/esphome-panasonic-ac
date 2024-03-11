@@ -2,9 +2,12 @@ from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_ENERGY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     UNIT_CELSIUS,
     UNIT_WATT,
+    UNIT_KILOWATT_HOURS,
 )
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -39,6 +42,7 @@ CONF_ECO_SWITCH = "eco_switch"
 CONF_ECONAVI_SWITCH = "econavi_switch"
 CONF_MILD_DRY_SWITCH = "mild_dry_switch"
 CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
+CONF_TODAY_POWER_CONSUMPTION = "today_power_consumption"
 CONF_WLAN = "wlan"
 CONF_CNT = "cnt"
 
@@ -94,7 +98,13 @@ CONFIG_SCHEMA = cv.typed_schema(
                   accuracy_decimals=0,
                   device_class=DEVICE_CLASS_POWER,
                   state_class=STATE_CLASS_MEASUREMENT,
-              ),
+                ),
+                cv.Optional(CONF_TODAY_POWER_CONSUMPTION): sensor.sensor_schema(
+                  unit_of_measurement=UNIT_KILOWATT_HOURS,
+                  accuracy_decimals=3,
+                  device_class=DEVICE_CLASS_ENERGY,
+                  state_class=STATE_CLASS_TOTAL_INCREASING,
+                ),
             }
         ),
     }

@@ -39,6 +39,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_econavi_switch(switch_::Switch *econavi_switch);
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
   void set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor);
+  void set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor);
 
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
 
@@ -55,6 +56,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   switch_::Switch *mild_dry_switch_ = nullptr;                  // Switch to toggle mild dry mode on/off
   sensor::Sensor *current_temperature_sensor_ = nullptr;        // Sensor to use for current temperature where AC does not report
   sensor::Sensor *current_power_consumption_sensor_ = nullptr;  // Sensor to store current power consumption from queries
+  sensor::Sensor *today_power_consumption_sensor_ = nullptr;    // Sensor to store today power consumption
 
   std::string vertical_swing_state_;
   std::string horizontal_swing_state_;
@@ -73,9 +75,12 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   uint32_t init_time_;             // Stores the current time
   uint32_t last_read_;             // Stores the time at which the last read was done
+  uint32_t last_kWh_;              // Stores the time at which the last power calculation was done
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
+  float today_consumption = 0;     // Cumulative kWh
+  
   climate::ClimateTraits traits() override;
 
   void read_data();
