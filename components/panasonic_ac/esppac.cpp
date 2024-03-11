@@ -1,7 +1,7 @@
 #include "esppac.h"
 #include "esphome/core/log.h"
 #include "esphome/core/time.h"
-#include "ctime"
+#include "time"
 
 namespace esphome {
 namespace panasonic_ac {
@@ -41,11 +41,23 @@ void PanasonicAC::setup() {
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
 }
 
+time_t day_seconds() {
+    time_t t1, t2;
+    struct tm tms;
+    time(&t1);
+    localtime_r(&t1, &tms);
+    tms.tm_hour = 0;
+    tms.tm_min = 0;
+    tms.tm_sec = 0;
+    t2 = mktime(&tms);
+    return t1 - t2;
+}
+
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
 
   auto time = ESPTime();
-  ESP_LOGD(TAG, 'Time: %d', time.second);
+  ESP_LOGD(TAG, 'Time: %d', day_seconds());
 }
 
 void PanasonicAC::read_data() {
