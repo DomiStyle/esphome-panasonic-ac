@@ -38,7 +38,7 @@ void PanasonicAC::setup() {
   this->last_packet_sent_ = millis();
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
-  ESP_LOGD(TAG, "Value of my sensor: %f", this->today_power_consumption_sensor.state);
+  ESP_LOGD(TAG, "Value of my sensor: %f", this->today_power_consumption_sensor_.state);
 }
 
 time_t day_seconds() {
