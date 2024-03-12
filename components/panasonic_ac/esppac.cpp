@@ -31,7 +31,7 @@ climate::ClimateTraits PanasonicAC::traits() {
   return traits;
 }
 
-extern double saved_today;
+extern double esphome::panasonic_ac::saved_today;
 
 void PanasonicAC::setup() {
   // Initialize times
@@ -41,7 +41,7 @@ void PanasonicAC::setup() {
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
 
-  this->today_consumption = saved_today;
+  this->today_consumption = esphome::panasonic_ac::saved_today;
 }
 
 time_t day_seconds() {
