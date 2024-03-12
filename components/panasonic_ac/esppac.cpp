@@ -2,6 +2,8 @@
 #include "esphome/core/log.h"
 #include "time.h"
 
+extern double *saved_today;
+
 namespace esphome {
 namespace panasonic_ac {
 
@@ -30,8 +32,6 @@ climate::ClimateTraits PanasonicAC::traits() {
 
   return traits;
 }
-
-extern double *saved_today;
 
 void PanasonicAC::setup() {
   // Initialize times
