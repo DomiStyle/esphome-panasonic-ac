@@ -2,9 +2,10 @@
 #include "esphome/core/log.h"
 #include "time.h"
 
+namespace esphome {
+
 extern globals::GlobalsComponent<double> *saved_today;
 
-namespace esphome {
 namespace panasonic_ac {
 
 static const char *const TAG = "panasonic_ac";
