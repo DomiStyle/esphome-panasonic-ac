@@ -31,6 +31,8 @@ climate::ClimateTraits PanasonicAC::traits() {
   return traits;
 }
 
+extern double saved_today;
+
 void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
