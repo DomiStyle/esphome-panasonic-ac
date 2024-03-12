@@ -54,9 +54,6 @@ time_t day_seconds() {
 
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
-
-  ESP_LOGD(TAG, "day_seconds = %d", day_seconds());
-  if (day_seconds() < 10) { this->today_consumption = 0; }
 }
 
 void PanasonicAC::read_data() {
@@ -182,6 +179,10 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
         this->today_power_consumption_sensor_->publish_state(this->today_consumption);  // Set today power consumption
       }
       this->last_kWh_ = this->last_read_;
+
+
+      ESP_LOGD(TAG, "day_seconds = %d", day_seconds());
+      if (day_seconds() < 10) { this->today_consumption = 0; }
     }
   }
 }
