@@ -167,7 +167,7 @@ climate::ClimateAction PanasonicAC::determine_action() {
 }
 
 void PanasonicAC::update_current_power_consumption(int16_t power) {
-  ESP_LOGD(TAG, "Value of my sensor: %f", this->today_power_consumption_sensor_->state);
+  ESP_LOGD(TAG, "Value of my sensor: %f", this->today_power_consumption_sensor_->get_state());
   if (this->current_power_consumption_sensor_ != nullptr) {
     if (this->current_power_consumption_sensor_->state != power) {
       this->current_power_consumption_sensor_->publish_state(power); // Set current power consumption
