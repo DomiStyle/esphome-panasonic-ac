@@ -1,6 +1,6 @@
 #include "esppac.h"
 #include "esphome/core/log.h"
-#include "esphome/components/globals.h"
+#include "esphome/components/globals/globals_component.h"
 #include "time.h"
 
 namespace esphome {
