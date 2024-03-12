@@ -3,10 +3,9 @@
 #include "esphome/components/globals/globals_component.h"
 #include "time.h"
 
+extern esphome::globals::GlobalsComponent<double> *saved_today;
+
 namespace esphome {
-
-extern globals::GlobalsComponent<double> *saved_today;
-
 namespace panasonic_ac {
 
 static const char *const TAG = "panasonic_ac";
