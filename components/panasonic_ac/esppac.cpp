@@ -2,7 +2,7 @@
 #include "esphome/core/log.h"
 #include "time.h"
 
-extern esphome::globals::RestoringGlobalsComponent *saved_today;
+extern globals::GlobalsComponent<double> *saved_today;
 
 namespace esphome {
 namespace panasonic_ac {
