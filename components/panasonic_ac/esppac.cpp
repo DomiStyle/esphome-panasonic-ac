@@ -31,6 +31,8 @@ climate::ClimateTraits PanasonicAC::traits() {
   return traits;
 }
 
+extern double saved_today;
+
 void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
@@ -38,6 +40,8 @@ void PanasonicAC::setup() {
   this->last_packet_sent_ = millis();
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
+
+  this->today_consumption = saved_today
 }
 
 time_t day_seconds() {
