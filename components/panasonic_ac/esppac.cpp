@@ -41,7 +41,7 @@ void PanasonicAC::setup() {
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
 
-  this->today_consumption = saved_today; //id(saved_today).state;
+  this->today_consumption = &saved_today; //id(saved_today).state;
 }
 
 time_t day_seconds() {
