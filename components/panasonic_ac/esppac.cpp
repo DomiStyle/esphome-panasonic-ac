@@ -169,20 +169,23 @@ climate::ClimateAction PanasonicAC::determine_action() {
 void PanasonicAC::update_current_power_consumption(int16_t power) {
   if (this->current_power_consumption_sensor_ != nullptr) {
     if (this->current_power_consumption_sensor_->state != power) {
-      this->current_power_consumption_sensor_->publish_state(power);  // Set current power consumption
+      this->current_power_consumption_sensor_->publish_state(power); // Set current power consumption
     }
     if (this->today_power_consumption_sensor_ != nullptr) {
       double oldConsumption = std::round(this->today_consumption * 1000.0) / 1000.0;
       this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
       double consumption = std::round(this->today_consumption * 1000.0) / 1000.0;
       if (consumption != oldConsumption) {
-        this->today_power_consumption_sensor_->publish_state(this->today_consumption);  // Set today power consumption
+        this->today_power_consumption_sensor_->publish_state(this->today_consumption); // Set today power consumption
       }
       this->last_kWh_ = this->last_read_;
 
-
-      ESP_LOGD(TAG, "day_seconds = %d", day_seconds());
-      if (day_seconds() < 10) { this->today_consumption = 0; }
+      uint32_t seconds = day_seconds()
+      if (seconds < last_time_ and last_time_ > 14400) { // When seconds past midnight drops it indicates a new day (if occurring after 4am)
+        this->today_consumption = 0;
+        ESP_LOGD(TAG, "Reset today consumption");
+      }
+      last_time_ = seconds;
     }
   }
 }
