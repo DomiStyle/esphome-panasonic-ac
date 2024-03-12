@@ -8,7 +8,6 @@
 #include "esphome/core/component.h"
 
 namespace esphome {
-
 namespace panasonic_ac {
 
 static const char *const VERSION = "2.4.0";
@@ -16,12 +15,11 @@ static const char *const VERSION = "2.4.0";
 static const uint8_t BUFFER_SIZE = 128;  // The maximum size of a single packet (both receive and transmit)
 static const uint8_t READ_TIMEOUT = 20;  // The maximum time to wait before considering a packet complete
 
-static const uint8_t MIN_TEMPERATURE = 16;     // Minimum temperature as reported by Panasonic app
-static const uint8_t MAX_TEMPERATURE = 30;     // Maximum temperature as supported by Panasonic app
-static const float TEMPERATURE_STEP = 0.5;     // Steps the temperature can be set in
-static const float TEMPERATURE_TOLERANCE = 2;  // The tolerance to allow when checking the climate state
-static const uint8_t TEMPERATURE_THRESHOLD =
-    100;  // Maximum temperature the AC can report before considering the temperature as invalid
+static const uint8_t MIN_TEMPERATURE = 16;         // Minimum temperature as reported by Panasonic app
+static const uint8_t MAX_TEMPERATURE = 30;         // Maximum temperature as supported by Panasonic app
+static const float TEMPERATURE_STEP = 0.5;         // Steps the temperature can be set in
+static const float TEMPERATURE_TOLERANCE = 2;      // The tolerance to allow when checking the climate state
+static const uint8_t TEMPERATURE_THRESHOLD = 100;  // Maximum temperature the AC can report before considering the temperature as invalid
 
 enum class CommandType { Normal, Response, Resend };
 
@@ -40,7 +38,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_econavi_switch(switch_::Switch *econavi_switch);
   void set_mild_dry_switch(switch_::Switch *mild_dry_switch);
   void set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor);
-
+  void set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor);
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
 
   void setup() override;
@@ -56,6 +54,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   switch_::Switch *mild_dry_switch_ = nullptr;                  // Switch to toggle mild dry mode on/off
   sensor::Sensor *current_temperature_sensor_ = nullptr;        // Sensor to use for current temperature where AC does not report
   sensor::Sensor *current_power_consumption_sensor_ = nullptr;  // Sensor to store current power consumption from queries
+  sensor::Sensor *today_power_consumption_sensor_ = nullptr;    // Sensor to store today power consumption
 
   std::string vertical_swing_state_;
   std::string horizontal_swing_state_;
@@ -74,13 +73,24 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
 
   uint32_t init_time_;             // Stores the current time
   uint32_t last_read_;             // Stores the time at which the last read was done
+  uint32_t last_kWh_;              // Stores the time at which the last energy calculation was done
+  uint32_t last_time_;             // Stores the last seconds since midnight value
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
+  double today_consumption = 0;    // Cumulative kWh
+  
   climate::ClimateTraits traits() override;
 
   void read_data();
 
+  uint8_t mode_state_ = 255;
+  uint8_t current_temperature_state_ = 255;
+  uint8_t target_temperature_state_ = 255;
+  esphome::optional<std::basic_string<char>> fan_mode_state_ = esphome::optional<std::basic_string<char>>("");
+  uint8_t swing_mode_state_ = 255;
+  esphome::optional<std::basic_string<char>> preset_state_ = esphome::optional<std::basic_string<char>>("");
+  
   void update_outside_temperature(int8_t temperature);
   void update_current_temperature(int8_t temperature);
   void update_target_temperature(uint8_t raw_value);

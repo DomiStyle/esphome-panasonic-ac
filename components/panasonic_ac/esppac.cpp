@@ -1,6 +1,9 @@
 #include "esppac.h"
-
 #include "esphome/core/log.h"
+#include "esphome/components/globals/globals_component.h"
+#include "time.h"
+
+extern esphome::globals::GlobalsComponent<double> *saved_today;
 
 namespace esphome {
 namespace panasonic_ac {
@@ -18,13 +21,23 @@ climate::ClimateTraits PanasonicAC::traits() {
   traits.set_visual_max_temperature(MAX_TEMPERATURE);
   traits.set_visual_temperature_step(TEMPERATURE_STEP);
 
-  traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT_COOL, climate::CLIMATE_MODE_COOL,
-                              climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_FAN_ONLY, climate::CLIMATE_MODE_DRY});
+  traits.set_supported_modes({
+    climate::CLIMATE_MODE_OFF,
+    climate::CLIMATE_MODE_HEAT_COOL,
+    climate::CLIMATE_MODE_COOL,
+    climate::CLIMATE_MODE_HEAT,
+    climate::CLIMATE_MODE_FAN_ONLY,
+    climate::CLIMATE_MODE_DRY
+  });
 
   traits.set_supported_custom_fan_modes({"Automatic", "1", "2", "3", "4", "5"});
 
-  traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_BOTH,
-                                    climate::CLIMATE_SWING_VERTICAL, climate::CLIMATE_SWING_HORIZONTAL});
+  traits.set_supported_swing_modes({
+    climate::CLIMATE_SWING_OFF,
+    climate::CLIMATE_SWING_BOTH,
+    climate::CLIMATE_SWING_VERTICAL,
+    climate::CLIMATE_SWING_HORIZONTAL
+  });
 
   traits.set_supported_custom_presets({"Normal", "Powerful", "Quiet"});
 
@@ -34,9 +47,20 @@ climate::ClimateTraits PanasonicAC::traits() {
 void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
+  this->last_kWh_ = this->init_time_;
   this->last_packet_sent_ = millis();
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
+
+  this->today_consumption = saved_today->value();
+}
+
+time_t day_seconds() {
+  time_t t1, t2;
+  struct tm tms;
+  time(&t1); localtime_r(&t1, &tms);
+  tms.tm_hour = tms.tm_min = tms.tm_sec = 0; t2 = mktime(&tms);
+  return t1 - t2;
 }
 
 void PanasonicAC::loop() {
@@ -154,9 +178,26 @@ climate::ClimateAction PanasonicAC::determine_action() {
 }
 
 void PanasonicAC::update_current_power_consumption(int16_t power) {
-  if (this->current_power_consumption_sensor_ != nullptr && this->current_power_consumption_sensor_->state != power) {
-    this->current_power_consumption_sensor_->publish_state(
-        power);  // Set current power consumption
+  if (this->current_power_consumption_sensor_ != nullptr) {
+    if (this->current_power_consumption_sensor_->state != power) {
+      this->current_power_consumption_sensor_->publish_state(power); // Set current power consumption
+    }
+    if (this->today_power_consumption_sensor_ != nullptr) {
+      double oldConsumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+      this->today_consumption += (power * ((this->last_read_ - this->last_kWh_) / 3600000.0) / 1000);
+      double consumption = std::round(this->today_consumption * 1000.0) / 1000.0;
+      if (consumption != oldConsumption) {
+        this->today_power_consumption_sensor_->publish_state(this->today_consumption); // Set today power consumption
+      }
+      this->last_kWh_ = this->last_read_;
+
+      uint32_t seconds = day_seconds();
+      if (seconds < last_time_ and last_time_ > 14400) { // When seconds past midnight drops it indicates a new day (if occurring after 4am)
+        this->today_consumption = 0;
+        ESP_LOGD(TAG, "Reset today consumption");
+      }
+      last_time_ = seconds;
+    }
   }
 }
 
@@ -172,10 +213,12 @@ void PanasonicAC::set_current_temperature_sensor(sensor::Sensor *current_tempera
 {
   this->current_temperature_sensor_ = current_temperature_sensor;
   this->current_temperature_sensor_->add_on_state_callback([this](float state)
-                                                           {
-                                                             this->current_temperature = state;
-                                                             this->publish_state();
-                                                           });
+    {
+      if (this->current_temperature != state) {
+        this->current_temperature = state;
+        this->current_temperature_sensor_->publish_state(state);
+      }
+    });
 }
 
 void PanasonicAC::set_vertical_swing_select(select::Select *vertical_swing_select) {
@@ -234,6 +277,10 @@ void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch) {
 
 void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor) {
   this->current_power_consumption_sensor_ = current_power_consumption_sensor;
+}
+
+void PanasonicAC::set_today_power_consumption_sensor(sensor::Sensor *today_power_consumption_sensor) {
+  this->today_power_consumption_sensor_ = today_power_consumption_sensor;
 }
 
 /*
