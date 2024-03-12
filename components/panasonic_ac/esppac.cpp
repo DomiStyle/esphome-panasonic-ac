@@ -180,7 +180,7 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
       }
       this->last_kWh_ = this->last_read_;
 
-      uint32_t seconds = day_seconds()
+      uint32_t seconds = day_seconds();
       if (seconds < last_time_ and last_time_ > 14400) { // When seconds past midnight drops it indicates a new day (if occurring after 4am)
         this->today_consumption = 0;
         ESP_LOGD(TAG, "Reset today consumption");
