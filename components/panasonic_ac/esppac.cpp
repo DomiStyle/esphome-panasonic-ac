@@ -41,7 +41,7 @@ void PanasonicAC::setup() {
 
   ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
 
-  this->today_consumption = *saved_today; //id(saved_today).state;
+  this->today_consumption = id(saved_today).state;
 }
 
 time_t day_seconds() {
@@ -171,7 +171,7 @@ climate::ClimateAction PanasonicAC::determine_action() {
 }
 
 void PanasonicAC::update_current_power_consumption(int16_t power) {
-  ESP_LOGD(TAG, "Value of my sensors: %f, %f, %f", this->today_power_consumption_sensor_->get_state(), this->today_consumption, *saved_today);
+  ESP_LOGD(TAG, "Value of my sensors: %f, %f, %f", this->today_power_consumption_sensor_->get_state(), this->today_consumption, id(saved_today).state);
   if (this->current_power_consumption_sensor_ != nullptr) {
     if (this->current_power_consumption_sensor_->state != power) {
       this->current_power_consumption_sensor_->publish_state(power); // Set current power consumption
