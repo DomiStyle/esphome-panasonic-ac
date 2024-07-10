@@ -70,10 +70,6 @@ In order to find out which features are supported by your AC, check the remote t
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 **current_power_consumption is just as ESTIMATED value by the AC**
 
-## Upgrading from 1.x to 2.x
-
-[Upgrade instructions](README.UPGRADING.md)
-
 # Hardware installation
 
 [Hardware installation for DNSK-P11](README.DNSKP11.md)
