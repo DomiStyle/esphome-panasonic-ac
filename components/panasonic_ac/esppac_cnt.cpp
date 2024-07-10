@@ -5,7 +5,7 @@ namespace esphome {
 namespace panasonic_ac {
 namespace CNT {
 
-static const char *const TAG = "panasonic_ac.cz_tacg1";
+static const char* TAG = "panasonic_ac.cz_tacg1";
 
 void PanasonicACCNT::setup() {
   PanasonicAC::setup();
