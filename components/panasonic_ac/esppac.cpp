@@ -5,7 +5,7 @@
 namespace esphome {
 namespace panasonic_ac {
 
-static const char *const TAG = "panasonic_ac";
+static const char* TAG = "panasonic_ac";
 
 climate::ClimateTraits PanasonicAC::traits() {
   auto traits = climate::ClimateTraits();
