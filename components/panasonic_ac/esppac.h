@@ -20,8 +20,7 @@ static const uint8_t MIN_TEMPERATURE = 16;     // Minimum temperature as reporte
 static const uint8_t MAX_TEMPERATURE = 30;     // Maximum temperature as supported by Panasonic app
 static const float TEMPERATURE_STEP = 0.5;     // Steps the temperature can be set in
 static const float TEMPERATURE_TOLERANCE = 2;  // The tolerance to allow when checking the climate state
-static const uint8_t TEMPERATURE_THRESHOLD =
-    100;  // Maximum temperature the AC can report before considering the temperature as invalid
+static const uint8_t TEMPERATURE_THRESHOLD = 100;  // Maximum temperature the AC can report before considering the temperature as invalid
 
 enum class CommandType { Normal, Response, Resend };
 

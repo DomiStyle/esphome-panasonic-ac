@@ -5,11 +5,11 @@ namespace esphome {
 namespace panasonic_ac {
 namespace CNT {
 
-static const char* TAG = "panasonic_ac.cz_tacg1";
+static const char* TAG = "panasonic_ac";
 
 void PanasonicACCNT::setup() {
   PanasonicAC::setup();
-
+  
   ESP_LOGD(TAG, "Using CZ-TACG1 protocol via CN-CNT");
 }
 
@@ -49,9 +49,15 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   }
 
   if (call.get_mode().has_value()) {
-    ESP_LOGV(TAG, "Requested mode change");
+    climate::ClimateMode mode = *call.get_mode();
+    ESP_LOGV(TAG, "Requested mode change to");
 
-    switch (*call.get_mode()) {
+    if (this->mode == climate::CLIMATE_MODE_OFF && this->lastMode.has_value()) {
+      ESP_LOGV(TAG, "Restoring last mode");
+      mode = lastMode.value();
+    }
+    
+    switch (mode) {
       case climate::CLIMATE_MODE_COOL:
         this->cmd[0] = 0x34;
         break;
@@ -68,7 +74,8 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
         this->cmd[0] = 0x64;
         break;
       case climate::CLIMATE_MODE_OFF:
-        this->cmd[0] = this->cmd[0] & 0xF0;  // Strip right nib to turn AC off
+        this->lastMode = this->mode;
+        this->cmd[0] = 0x30;
         break;
       default:
         ESP_LOGV(TAG, "Unsupported mode requested");
@@ -151,6 +158,7 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
  */
 void PanasonicACCNT::set_data(bool set) {
   this->mode = determine_mode(this->data[0]);
+  this->action = PanasonicAC::determine_action();
   this->custom_fan_mode = determine_fan_speed(this->data[3]);
 
   std::string verticalSwing = determine_vertical_swing(this->data[4]);
@@ -321,23 +329,19 @@ void PanasonicACCNT::handle_packet() {
 }
 
 climate::ClimateMode PanasonicACCNT::determine_mode(uint8_t mode) {
-  uint8_t nib1 = (mode >> 4) & 0x0F;  // Left nib for mode
-  uint8_t nib2 = (mode >> 0) & 0x0F;  // Right nib for power state
-
-  if (nib2 == 0x00)
-    return climate::CLIMATE_MODE_OFF;
-
-  switch (nib1) {
-    case 0x00:  // Auto
+  switch (mode) {
+    case 0x04:  // Auto
       return climate::CLIMATE_MODE_HEAT_COOL;
-    case 0x03:  // Cool
+    case 0x34:  // Cool
       return climate::CLIMATE_MODE_COOL;
-    case 0x04:  // Heat
+    case 0x44:  // Heat
       return climate::CLIMATE_MODE_HEAT;
-    case 0x02:  // Dry
+    case 0x24:  //Dry
       return climate::CLIMATE_MODE_DRY;
-    case 0x06:  // Fan only
+    case 0x64:  //Fan Only
       return climate::CLIMATE_MODE_FAN_ONLY;
+    case 0x30:  // Off
+      return climate::CLIMATE_MODE_OFF;
     default:
       ESP_LOGW(TAG, "Received unknown climate mode");
       return climate::CLIMATE_MODE_OFF;
