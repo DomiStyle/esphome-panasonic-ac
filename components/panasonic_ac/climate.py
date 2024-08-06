@@ -19,8 +19,6 @@ PanasonicAC = panasonic_ac_ns.class_(
 )
 panasonic_ac_cnt_ns = panasonic_ac_ns.namespace("CNT")
 PanasonicACCNT = panasonic_ac_cnt_ns.class_("PanasonicACCNT", PanasonicAC)
-panasonic_ac_wlan_ns = panasonic_ac_ns.namespace("WLAN")
-PanasonicACWLAN = panasonic_ac_wlan_ns.class_("PanasonicACWLAN", PanasonicAC)
 
 PanasonicACSwitch = panasonic_ac_ns.class_(
     "PanasonicACSwitch", switch.Switch, cg.Component
