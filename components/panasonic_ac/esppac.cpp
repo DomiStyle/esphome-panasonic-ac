@@ -7,30 +7,6 @@ namespace panasonic_ac {
 
 static const char* TAG = "panasonic_ac";
 
-climate::ClimateTraits PanasonicAC::traits() {
-  auto traits = climate::ClimateTraits();
-
-  traits.set_supports_action(true);
-
-  traits.set_supports_current_temperature(true);
-  traits.set_supports_two_point_target_temperature(false);
-  traits.set_visual_min_temperature(MIN_TEMPERATURE);
-  traits.set_visual_max_temperature(MAX_TEMPERATURE);
-  traits.set_visual_temperature_step(TEMPERATURE_STEP);
-
-  traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL,
-                              climate::CLIMATE_MODE_HEAT_COOL, climate::CLIMATE_MODE_DRY, climate::CLIMATE_MODE_FAN_ONLY});
-
-  traits.set_supported_custom_fan_modes({"Automatic", "1", "2", "3", "4", "5"});
-
-  traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_BOTH,
-                                    climate::CLIMATE_SWING_VERTICAL, climate::CLIMATE_SWING_HORIZONTAL});
-
-  traits.set_supported_custom_presets({"Normal", "Powerful", "Quiet"});
-
-  return traits;
-}
-
 void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();

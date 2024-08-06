@@ -41,10 +41,10 @@ Source: https://github.com/DomiStyle/esphome-panasonic-ac/tree/master/protocol/c
 
 | Preset          | Value |
 | --------------- | ----- |
-| Normal          | 00    |
+| None            | 00    |
 | Powerful        | 02    |
 | Quiet           | 04    |
-| Normal+nanoex   | 40    |
+| None+nanoex     | 40    |
 | Powerful+nanoex | 42    |
 | Quiet+nanoex    | 44    |
 | Econavi         | 10    |

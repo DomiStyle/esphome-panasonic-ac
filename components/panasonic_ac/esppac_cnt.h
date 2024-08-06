@@ -1,3 +1,5 @@
+#pragma once
+
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/climate/climate_mode.h"
 #include "esppac.h"

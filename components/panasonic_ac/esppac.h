@@ -7,19 +7,15 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 
+#include "panasonic_ac_traits.h"
+
 namespace esphome {
 namespace panasonic_ac {
 
-static const char *const VERSION = "2.4.1";
+static const char* VERSION = "2.4.1";
 
 static const uint8_t BUFFER_SIZE = 128;  // The maximum size of a single packet (both receive and transmit)
 static const uint8_t READ_TIMEOUT = 20;  // The maximum time to wait before considering a packet complete
-
-static const uint8_t MIN_TEMPERATURE = 16;     // Minimum temperature as reported by Panasonic app
-static const uint8_t MAX_TEMPERATURE = 30;     // Maximum temperature as supported by Panasonic app
-static const float TEMPERATURE_STEP = 0.5;     // Steps the temperature can be set in
-static const float TEMPERATURE_TOLERANCE = 2;  // The tolerance to allow when checking the climate state
-static const uint8_t TEMPERATURE_THRESHOLD = 100;  // Maximum temperature the AC can report before considering the temperature as invalid
 
 enum class CommandType { Normal, Response, Resend };
 
@@ -71,7 +67,13 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
-  climate::ClimateTraits traits() override;
+  climate::ClimateTraits traits() override {
+    auto traits = PanasonicACTraits();
+    traits.set_default_traits();
+    //traits.add_supported_swing_mode(climate::CLIMATE_SWING_HORIZONTAL);
+    //traits.add_supported_swing_mode(climate::CLIMATE_SWING_BOTH);
+    return traits;
+  }
 
   void read_data();
 
