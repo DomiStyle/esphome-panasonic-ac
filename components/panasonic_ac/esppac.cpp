@@ -35,11 +35,15 @@ void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
   this->last_packet_sent_ = millis();
-  ESP_LOGI(TAG, "Panasonic AC component v%s starting...", VERSION);
 }
 
 void PanasonicAC::loop() {
   read_data();  // Read data from UART (if there is any)
+}
+
+void PanasonicAC::dump_config() {
+  ESP_LOGCONFIG(TAG, "Panasonic AC component v%s", VERSION);
+  this->dump_traits_(TAG);
 }
 
 void PanasonicAC::read_data() {

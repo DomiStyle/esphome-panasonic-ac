@@ -45,6 +45,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void setup() override;
   void loop() override;
 
+  void dump_config() override;
  protected:
   sensor::Sensor *outside_temperature_sensor_ = nullptr;        // Sensor to store outside temperature from queries
   select::Select *vertical_swing_select_ = nullptr;             // Select to store manual position of vertical swing

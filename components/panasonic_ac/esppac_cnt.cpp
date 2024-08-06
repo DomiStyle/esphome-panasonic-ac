@@ -9,8 +9,6 @@ static const char* TAG = "panasonic_ac";
 
 void PanasonicACCNT::setup() {
   PanasonicAC::setup();
-  
-  ESP_LOGD(TAG, "Using CZ-TACG1 protocol via CN-CNT");
 }
 
 void PanasonicACCNT::loop() {
@@ -33,6 +31,12 @@ void PanasonicACCNT::loop() {
   }
   handle_cmd();
   handle_poll();  // Handle sending poll packets
+}
+
+void PanasonicACCNT::dump_config() {
+  PanasonicAC::dump_config();
+
+  ESP_LOGCONFIG(TAG, "Protocol: CN-CNT");
 }
 
 /*
