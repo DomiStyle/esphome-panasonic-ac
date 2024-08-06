@@ -11,7 +11,7 @@ static const float TEMPERATURE_STEP = 0.5;     // Steps the temperature can be s
 static const float TEMPERATURE_TOLERANCE = 2;  // The tolerance to allow when checking the climate state
 static const uint8_t TEMPERATURE_THRESHOLD = 100;  // Maximum temperature the AC can report before considering the temperature as invalid
 
-static const std::string FAN_SPEED_LEVEL_AUTO = "Auto "; // HACK: setting to "Auto" parsed as CLIMATE_FAN_MODE_AUTO on the UI
+static const std::string FAN_SPEED_LEVEL_AUTO = "Auto "; // HACK: setting to "Auto" (without trailing space) won't work because it will be parsed as builtin CLIMATE_FAN_MODE_AUTO
 static const std::string FAN_SPEED_LEVEL_1 = "1";
 static const std::string FAN_SPEED_LEVEL_2 = "2";
 static const std::string FAN_SPEED_LEVEL_3 = "3";
