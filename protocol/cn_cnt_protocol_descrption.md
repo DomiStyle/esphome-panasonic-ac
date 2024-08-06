@@ -15,9 +15,9 @@ Source: https://github.com/DomiStyle/esphome-panasonic-ac/tree/master/protocol/c
 | Fan only  | 64    |
 | Off       | 30    |
 
-### Fan Speeds
+### Fan Speed Levels
 
-| Speed | Value |
+| Level | Value |
 | ----- | ----- |
 | Auto  | A0    |
 | 1     | 30    |
