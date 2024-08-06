@@ -70,8 +70,9 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   climate::ClimateTraits traits() override {
     auto traits = PanasonicACTraits();
     traits.set_default_traits();
-    //traits.add_supported_swing_mode(climate::CLIMATE_SWING_HORIZONTAL);
-    //traits.add_supported_swing_mode(climate::CLIMATE_SWING_BOTH);
+    // TODO: should be configurable
+    traits.add_supported_swing_mode(climate::CLIMATE_SWING_HORIZONTAL);
+    traits.add_supported_swing_mode(climate::CLIMATE_SWING_BOTH);
     return traits;
   }
 

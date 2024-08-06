@@ -46,7 +46,6 @@ climate:
   - platform: panasonic_ac
     name: None
     icon: mdi:air-conditioner
-    type: cnt
     horizontal_swing_select:
       name: Horizontal Swing Mode
     vertical_swing_select:
