@@ -18,7 +18,8 @@ void PanasonicAC::loop() {
 }
 
 void PanasonicAC::dump_config() {
-  ESP_LOGCONFIG(TAG, "Panasonic AC component v%s", VERSION);
+  LOG_CLIMATE("", "Panasonic AC component -", this);
+  ESP_LOGCONFIG(TAG, "Version: %s", VERSION);
   this->dump_traits_(TAG);
 }
 
