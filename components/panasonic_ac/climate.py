@@ -39,7 +39,6 @@ CONF_ECO_SWITCH = "eco_switch"
 CONF_ECONAVI_SWITCH = "econavi_switch"
 CONF_MILD_DRY_SWITCH = "mild_dry_switch"
 CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
-CONF_WLAN = "wlan"
 CONF_CNT = "cnt"
 
 HORIZONTAL_SWING_OPTIONS = [
@@ -48,11 +47,19 @@ HORIZONTAL_SWING_OPTIONS = [
     "left_center",
     "center",
     "right_center",
-    "right",
+    "right"
 ]
 
 
-VERTICAL_SWING_OPTIONS = ["swing", "auto", "up", "up_center", "center", "down_center", "down"]
+VERTICAL_SWING_OPTIONS = [
+    "swing",
+    "auto",
+    "up",
+    "up_center",
+    "center",
+    "down_center",
+    "down"
+]
 
 SWITCH_SCHEMA = switch.SWITCH_SCHEMA.extend(cv.COMPONENT_SCHEMA).extend(
     {cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}
@@ -77,11 +84,6 @@ SCHEMA = climate.CLIMATE_SCHEMA.extend(
 
 CONFIG_SCHEMA = cv.typed_schema(
     {
-        CONF_WLAN: SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(PanasonicACWLAN),
-            }
-        ),
         CONF_CNT: SCHEMA.extend(
             {
                 cv.GenerateID(): cv.declare_id(PanasonicACCNT),

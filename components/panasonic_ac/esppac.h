@@ -8,7 +8,6 @@
 #include "esphome/core/component.h"
 
 namespace esphome {
-
 namespace panasonic_ac {
 
 static const char *const VERSION = "2.4.1";
@@ -23,11 +22,6 @@ static const float TEMPERATURE_TOLERANCE = 2;  // The tolerance to allow when ch
 static const uint8_t TEMPERATURE_THRESHOLD = 100;  // Maximum temperature the AC can report before considering the temperature as invalid
 
 enum class CommandType { Normal, Response, Resend };
-
-enum class ACType {
-  DNSKP11,  // New module (via CN-WLAN)
-  CZTACG1   // Old module (via CN-CNT)
-};
 
 class PanasonicAC : public Component, public uart::UARTDevice, public climate::Climate {
  public:
