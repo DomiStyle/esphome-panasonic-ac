@@ -7,7 +7,7 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 
-#include "panasonic_ac_traits.h"
+#include "panasonic_ac_traits_builder.h"
 
 namespace esphome {
 namespace panasonic_ac {
@@ -21,6 +21,10 @@ enum class CommandType { Normal, Response, Resend };
 
 class PanasonicAC : public Component, public uart::UARTDevice, public climate::Climate {
  public:
+  PanasonicACTraitsBuilder &get_traits_builder() {
+    return panasonic_ac_traits_builder_;
+  }
+
   void set_vertical_swing_select(select::Select *vertical_swing_select);
   void set_horizontal_swing_select(select::Select *horizontal_swing_select);
   void set_nanoex_switch(switch_::Switch *nanoex_switch);
@@ -55,13 +59,11 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   uint32_t last_packet_sent_;      // Stores the time at which the last packet was sent
   uint32_t last_packet_received_;  // Stores the time at which the last packet was received
 
+  PanasonicACTraitsBuilder panasonic_ac_traits_builder_ = PanasonicACTraitsBuilder();
+  climate::ClimateTraits panasonic_ac_traits_;
+
   climate::ClimateTraits traits() override {
-    auto traits = PanasonicACTraits();
-    traits.set_default_traits();
-    // TODO: should be configurable
-    traits.add_supported_swing_mode(climate::CLIMATE_SWING_HORIZONTAL);
-    traits.add_supported_swing_mode(climate::CLIMATE_SWING_BOTH);
-    return traits;
+    return panasonic_ac_traits_;
   }
 
   void read_data();

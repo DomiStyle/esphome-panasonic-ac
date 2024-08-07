@@ -11,6 +11,7 @@ void PanasonicAC::setup() {
   // Initialize times
   this->init_time_ = millis();
   this->last_packet_sent_ = millis();
+  this->panasonic_ac_traits_ = this->panasonic_ac_traits_builder_.build_traits();
 }
 
 void PanasonicAC::loop() {

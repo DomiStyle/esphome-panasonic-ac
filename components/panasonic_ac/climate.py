@@ -151,49 +151,50 @@ def setup_default_icon_(var, config, default_icon):
         cg.add(var.set_icon(default_icon))
 
 async def setup_swing_mode_(swing_mode_config, swing_selector_default_icon, swing_selector_options):
-    if cv.boolean(swing_mode_config[CONF_SUPPORTED]):
-        swing_selector_config = swing_mode_config[CONF_SELECTOR]
-        swing_selector = await select.new_select(swing_selector_config, options=swing_selector_options)
-        await cg.register_component(swing_selector, swing_selector_config)
-        setup_default_icon_(swing_selector, swing_selector_config, swing_selector_default_icon)
-        return swing_selector
-    else:
-        return None
+    swing_selector_config = swing_mode_config[CONF_SELECTOR]
+    swing_selector = await select.new_select(swing_selector_config, options=swing_selector_options)
+    await cg.register_component(swing_selector, swing_selector_config)
+    setup_default_icon_(swing_selector, swing_selector_config, swing_selector_default_icon)
+    return swing_selector
+
+async def setup_horizontal_swing_mode_(panasonic_ac, traits_config):
+    horizontal_swing_mode_config = traits_config[CONF_HORIZONTAL_SWING_MODE]
+    if cv.boolean(horizontal_swing_mode_config[CONF_SUPPORTED]):
+        horizontal_swing_selector = await setup_swing_mode_(horizontal_swing_mode_config, "mdi:arrow-left-right", HORIZONTAL_SWING_OPTIONS)
+        cg.add(panasonic_ac.get_traits_builder().add_horizontal_swing_mode())
+        cg.add(panasonic_ac.set_horizontal_swing_select(horizontal_swing_selector))
+
+async def setup_vertical_swing_mode_(panasonic_ac, traits_config):
+    vertical_swing_mode_config = traits_config[CONF_VERTICAL_SWING_MODE]
+    if cv.boolean(vertical_swing_mode_config[CONF_SUPPORTED]):
+        vertical_swing_selector = await setup_swing_mode_(vertical_swing_mode_config, "mdi:arrow-up-down", VERTICAL_SWING_OPTIONS)
+        cg.add(panasonic_ac.get_traits_builder().add_vertical_swing_mode())
+        cg.add(panasonic_ac.set_vertical_swing_select(vertical_swing_selector))
+
+async def setup_nanoex_mode_(panasonic_ac, traits_config):
+    nanoex_mode_config = traits_config[CONF_NANOEX_MODE]
+    if cv.boolean(nanoex_mode_config[CONF_SUPPORTED]):
+        nanoex_switch_config = nanoex_mode_config[CONF_SWITCH]
+        nanoex_switch = await switch.new_switch(nanoex_switch_config)
+        await cg.register_component(nanoex_switch, nanoex_switch_config)
+        setup_default_icon_(nanoex_switch, nanoex_switch_config, "mdi:air-filter")
+        cg.add(panasonic_ac.set_nanoex_switch(nanoex_switch))
 
 async def setup_traits_(panasonic_ac, traits_config):
-        if CONF_HORIZONTAL_SWING_MODE in traits_config:
-            horizontal_swing_mode_config = traits_config[CONF_HORIZONTAL_SWING_MODE]
-            horizontal_swing_selector = await setup_swing_mode_(horizontal_swing_mode_config, "mdi:arrow-left-right", HORIZONTAL_SWING_OPTIONS)
-            if horizontal_swing_selector is not None:
-                cg.add(panasonic_ac.set_horizontal_swing_select(horizontal_swing_selector))
-        
-        if CONF_VERTICAL_SWING_MODE in traits_config:
-            vertical_swing_mode_config = traits_config[CONF_VERTICAL_SWING_MODE]
-            vertical_swing_selector = await setup_swing_mode_(vertical_swing_mode_config, "mdi:arrow-up-down", VERTICAL_SWING_OPTIONS)
-            if vertical_swing_selector is not None:
-                cg.add(panasonic_ac.set_vertical_swing_select(vertical_swing_selector))
-
-        if CONF_NANOEX_MODE in traits_config:
-            nanoex_mode_config = traits_config[CONF_NANOEX_MODE]
-            if cv.boolean(nanoex_mode_config[CONF_SUPPORTED]):
-                nanoex_switch_config = nanoex_mode_config[CONF_SWITCH]
-                nanoex_switch = await switch.new_switch(nanoex_switch_config)
-                await cg.register_component(nanoex_switch, nanoex_switch_config)
-                setup_default_icon_(nanoex_switch, nanoex_switch_config, "mdi:air-filter")
-                cg.add(panasonic_ac.set_nanoex_switch(nanoex_switch))
+    await setup_horizontal_swing_mode_(panasonic_ac, traits_config);
+    await setup_vertical_swing_mode_(panasonic_ac, traits_config);
+    await setup_nanoex_mode_(panasonic_ac, traits_config);
 
 async def setup_sensors_(panasonic_ac, sensors_config):
-    if CONF_OUTSIDE_TEMPERATURE in sensors_config:
-        outside_temp_config = sensors_config[CONF_OUTSIDE_TEMPERATURE]
-        if cv.boolean(outside_temp_config[CONF_SUPPORTED]):
-            outside_temp_sensor = await sensor.new_sensor(outside_temp_config[CONF_SENSOR])
-            cg.add(panasonic_ac.set_outside_temperature_sensor(outside_temp_sensor))
+    outside_temp_config = sensors_config[CONF_OUTSIDE_TEMPERATURE]
+    if cv.boolean(outside_temp_config[CONF_SUPPORTED]):
+        outside_temp_sensor = await sensor.new_sensor(outside_temp_config[CONF_SENSOR])
+        cg.add(panasonic_ac.set_outside_temperature_sensor(outside_temp_sensor))
 
-    if CONF_CURRENT_POWER_CONSUMPTION in sensors_config:
-        consumption_config = sensors_config[CONF_CURRENT_POWER_CONSUMPTION]
-        if cv.boolean(consumption_config[CONF_SUPPORTED]):
-            consumption_sensor = await sensor.new_sensor(consumption_config[CONF_SENSOR])
-            cg.add(panasonic_ac.set_current_power_consumption_sensor(consumption_sensor))
+    consumption_config = sensors_config[CONF_CURRENT_POWER_CONSUMPTION]
+    if cv.boolean(consumption_config[CONF_SUPPORTED]):
+        consumption_sensor = await sensor.new_sensor(consumption_config[CONF_SENSOR])
+        cg.add(panasonic_ac.set_current_power_consumption_sensor(consumption_sensor))
 
 async def to_code(config):
     panasonic_ac = cg.new_Pvariable(config[CONF_ID])
@@ -203,9 +204,5 @@ async def to_code(config):
     await uart.register_uart_device(panasonic_ac, config)
     
     setup_default_icon_(panasonic_ac, config, "mdi:air-conditioner")
-    
-    if CONF_TRAITS in config:
-        await setup_traits_(panasonic_ac, config[CONF_TRAITS])
-
-    if CONF_SENSORS in config:
-        await setup_sensors_(panasonic_ac, config[CONF_SENSORS])
+    await setup_traits_(panasonic_ac, config[CONF_TRAITS])
+    await setup_sensors_(panasonic_ac, config[CONF_SENSORS])
