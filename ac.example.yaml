@@ -51,18 +51,14 @@ climate:
         selector:
           name: Vertical Swing Mode
       horizontal_swing_mode:
-        supported: true
-        selector:
-          name: Horizontal Swing Mode
+        supported: false
       nanoex_mode:
         supported: true
         switch:
           name: NanoeX
     sensors:
       outside_temperature:
-        supported: true
-        sensor:
-          name: Outside Temperature
+        supported: false
       current_power_consumption:
         supported: true
         sensor:

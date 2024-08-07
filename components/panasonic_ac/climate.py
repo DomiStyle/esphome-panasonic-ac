@@ -71,26 +71,45 @@ SELECT_SCHEMA = select.SELECT_SCHEMA.extend(
     {cv.GenerateID(CONF_ID): cv.declare_id(PanasonicACSelect)}
 )
 
-HORIZONTAL_SWING_MODE_SCHEMA = cv.Schema({
-    cv.Required(CONF_SUPPORTED): cv.boolean,
-    cv.Optional(CONF_SELECTOR): SELECT_SCHEMA
-})
+def _validate_selector_schema(config):
+    if cv.boolean(config[CONF_SUPPORTED]) and CONF_SELECTOR not in config:
+        raise cv.Invalid(f"'{CONF_SELECTOR}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
 
-VERTICAL_SWING_MODE_SCHEMA = cv.Schema({
-    cv.Required(CONF_SUPPORTED): cv.boolean,
-    cv.Optional(CONF_SELECTOR): SELECT_SCHEMA
-})
+HORIZONTAL_SWING_MODE_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_SUPPORTED): cv.boolean,
+        cv.Optional(CONF_SELECTOR): SELECT_SCHEMA
+    }
+).add_extra(_validate_selector_schema)
 
-NANOEX_MODE_SCHEMA = cv.Schema({
-    cv.Required(CONF_SUPPORTED): cv.boolean,
-    cv.Optional(CONF_SWITCH): SWITCH_SCHEMA
-})
+VERTICAL_SWING_MODE_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_SUPPORTED): cv.boolean,
+        cv.Optional(CONF_SELECTOR): SELECT_SCHEMA
+    }
+).add_extra(_validate_selector_schema)
+
+def _validate_switch_schema(config):
+    if cv.boolean(config[CONF_SUPPORTED]) and CONF_SWITCH not in config:
+        raise cv.Invalid(f"'{CONF_SWITCH}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
+
+NANOEX_MODE_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_SUPPORTED): cv.boolean,
+        cv.Optional(CONF_SWITCH): SWITCH_SCHEMA
+    }
+).add_extra(_validate_switch_schema)
 
 TRAITS_SCHEMA = cv.Schema({
-    cv.Optional(CONF_VERTICAL_SWING_MODE): VERTICAL_SWING_MODE_SCHEMA,
-    cv.Optional(CONF_HORIZONTAL_SWING_MODE): HORIZONTAL_SWING_MODE_SCHEMA,
-    cv.Optional(CONF_NANOEX_MODE): NANOEX_MODE_SCHEMA
+    cv.Required(CONF_VERTICAL_SWING_MODE): VERTICAL_SWING_MODE_SCHEMA,
+    cv.Required(CONF_HORIZONTAL_SWING_MODE): HORIZONTAL_SWING_MODE_SCHEMA,
+    cv.Required(CONF_NANOEX_MODE): NANOEX_MODE_SCHEMA
 })
+
+def _validate_sensor_schema(config):
+    if cv.boolean(config[CONF_SUPPORTED]) and CONF_SENSOR not in config:
+        raise cv.Invalid(f"'{CONF_SENSOR}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
+
 
 OUTSIDE_TEMPERATURE_SENSOR_SCHEMA = cv.Schema({
     cv.Required(CONF_SUPPORTED): cv.boolean,
@@ -100,7 +119,7 @@ OUTSIDE_TEMPERATURE_SENSOR_SCHEMA = cv.Schema({
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT
     )
-})
+}).add_extra(_validate_sensor_schema)
 
 CONF_CURRENT_POWER_CONSUMPTION_SCHEMA = cv.Schema({
     cv.Required(CONF_SUPPORTED): cv.boolean,
@@ -110,18 +129,18 @@ CONF_CURRENT_POWER_CONSUMPTION_SCHEMA = cv.Schema({
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT
     )
-})
+}).add_extra(_validate_sensor_schema)
 
 SENSORS_SCHEMA = cv.Schema({
-    cv.Optional(CONF_OUTSIDE_TEMPERATURE): OUTSIDE_TEMPERATURE_SENSOR_SCHEMA,
-    cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): CONF_CURRENT_POWER_CONSUMPTION_SCHEMA
+    cv.Required(CONF_OUTSIDE_TEMPERATURE): OUTSIDE_TEMPERATURE_SENSOR_SCHEMA,
+    cv.Required(CONF_CURRENT_POWER_CONSUMPTION): CONF_CURRENT_POWER_CONSUMPTION_SCHEMA
 })
 
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(PanasonicACCNT),
-        cv.Optional(CONF_TRAITS): TRAITS_SCHEMA,
-        cv.Optional(CONF_SENSORS): SENSORS_SCHEMA
+        cv.Required(CONF_TRAITS): TRAITS_SCHEMA,
+        cv.Required(CONF_SENSORS): SENSORS_SCHEMA
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
