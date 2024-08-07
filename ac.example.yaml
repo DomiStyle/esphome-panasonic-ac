@@ -45,22 +45,16 @@ external_components:
 climate:
   - platform: panasonic_ac
     name: None
-    icon: mdi:air-conditioner
-    horizontal_swing_select:
-      name: Horizontal Swing Mode
-    vertical_swing_select:
-      name: Vertical Swing Mode
-    nanoex_switch:
-      name: NanoeX Switch
-    outside_temperature:
-      name: Outside Temperature
-    current_power_consumption:
-      name: AC Power Consumption
-
-    # Other options:
-    # eco_switch:
-    #  name: Livingroom Panasonic AC Eco Switch
-    # mild_dry_switch:
-    #   name: Panasonic AC Mild Dry Switch
-    # Useful when the ac does not report a current temperature (CZ-TACG1 only)
-    # current_temperature_sensor: temperature_sensor_id
+    traits:
+      vertical_swing_mode:
+        supported: true
+        selector:
+          name: Vertical Swing Mode
+      horizontal_swing_mode:
+        supported: true
+        selector:
+          name: Horizontal Swing Mode
+      nanoex_mode:
+        supported: true
+        switch:
+          name: NanoeX
