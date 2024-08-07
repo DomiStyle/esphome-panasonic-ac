@@ -74,6 +74,7 @@ SELECT_SCHEMA = select.SELECT_SCHEMA.extend(
 def _validate_selector_schema(config):
     if cv.boolean(config[CONF_SUPPORTED]) and CONF_SELECTOR not in config:
         raise cv.Invalid(f"'{CONF_SELECTOR}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
+    return config
 
 HORIZONTAL_SWING_MODE_SCHEMA = cv.Schema(
     {
@@ -92,6 +93,7 @@ VERTICAL_SWING_MODE_SCHEMA = cv.Schema(
 def _validate_switch_schema(config):
     if cv.boolean(config[CONF_SUPPORTED]) and CONF_SWITCH not in config:
         raise cv.Invalid(f"'{CONF_SWITCH}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
+    return config
 
 NANOEX_MODE_SCHEMA = cv.Schema(
     {
@@ -109,7 +111,7 @@ TRAITS_SCHEMA = cv.Schema({
 def _validate_sensor_schema(config):
     if cv.boolean(config[CONF_SUPPORTED]) and CONF_SENSOR not in config:
         raise cv.Invalid(f"'{CONF_SENSOR}' is required if '{CONF_SUPPORTED}' is set to {config[CONF_SUPPORTED]}!")
-
+    return config
 
 OUTSIDE_TEMPERATURE_SENSOR_SCHEMA = cv.Schema({
     cv.Required(CONF_SUPPORTED): cv.boolean,
