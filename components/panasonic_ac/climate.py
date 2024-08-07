@@ -39,10 +39,6 @@ CONF_SWITCH = "switch"
 CONF_SUPPORTED = "supported"
 
 CONF_OUTSIDE_TEMPERATURE = "outside_temperature"
-CONF_CURRENT_TEMPERATURE_SENSOR = "current_temperature_sensor"
-CONF_ECO_SWITCH = "eco_switch"
-CONF_ECONAVI_SWITCH = "econavi_switch"
-CONF_MILD_DRY_SWITCH = "mild_dry_switch"
 CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 
 HORIZONTAL_SWING_OPTIONS = [
@@ -103,7 +99,6 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
         cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
             unit_of_measurement=UNIT_WATT,
             accuracy_decimals=0,
@@ -166,18 +161,6 @@ async def to_code(config):
     if CONF_OUTSIDE_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTSIDE_TEMPERATURE])
         cg.add(panasonic_ac.set_outside_temperature_sensor(sens))
-
-    for s in [CONF_ECO_SWITCH, CONF_MILD_DRY_SWITCH, CONF_ECONAVI_SWITCH]:
-        if s in config:
-            conf = config[s]
-            a_switch = cg.new_Pvariable(conf[CONF_ID])
-            await cg.register_component(a_switch, conf)
-            await switch.register_switch(a_switch, conf)
-            cg.add(getattr(panasonic_ac, f"set_{s}")(a_switch))
-
-    if CONF_CURRENT_TEMPERATURE_SENSOR in config:
-        sens = await cg.get_variable(config[CONF_CURRENT_TEMPERATURE_SENSOR])
-        cg.add(panasonic_ac.set_current_temperature_sensor(sens))
 
     if CONF_CURRENT_POWER_CONSUMPTION in config:
         sens = await sensor.new_sensor(config[CONF_CURRENT_POWER_CONSUMPTION])

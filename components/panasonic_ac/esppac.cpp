@@ -92,27 +92,6 @@ void PanasonicAC::update_nanoex(bool nanoex) {
   }
 }
 
-void PanasonicAC::update_eco(bool eco) {
-  if (this->eco_switch_ != nullptr) {
-    this->eco_state_ = eco;
-    this->eco_switch_->publish_state(this->eco_state_);
-  }
-}
-
-void PanasonicAC::update_econavi(bool econavi) {
-  if (this->econavi_switch_ != nullptr) {
-    this->econavi_state_ = econavi;
-    this->econavi_switch_->publish_state(this->econavi_state_);
-  }
-}
-
-void PanasonicAC::update_mild_dry(bool mild_dry) {
-  if (this->mild_dry_switch_ != nullptr) {
-    this->mild_dry_state_ = mild_dry;
-    this->mild_dry_switch_->publish_state(this->mild_dry_state_);
-  }
-}
-
 climate::ClimateAction PanasonicAC::determine_action() {
   if (this->mode == climate::CLIMATE_MODE_OFF) {
     return climate::CLIMATE_ACTION_OFF;
@@ -133,8 +112,7 @@ climate::ClimateAction PanasonicAC::determine_action() {
 
 void PanasonicAC::update_current_power_consumption(int16_t power) {
   if (this->current_power_consumption_sensor_ != nullptr && this->current_power_consumption_sensor_->state != power) {
-    this->current_power_consumption_sensor_->publish_state(
-        power);  // Set current power consumption
+    this->current_power_consumption_sensor_->publish_state(power);  // Set current power consumption
   }
 }
 
@@ -144,16 +122,6 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
 
 void PanasonicAC::set_outside_temperature_sensor(sensor::Sensor *outside_temperature_sensor) {
   this->outside_temperature_sensor_ = outside_temperature_sensor;
-}
-
-void PanasonicAC::set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor)
-{
-  this->current_temperature_sensor_ = current_temperature_sensor;
-  this->current_temperature_sensor_->add_on_state_callback([this](float state)
-                                                           {
-                                                             this->current_temperature = state;
-                                                             this->publish_state();
-                                                           });
 }
 
 void PanasonicAC::set_vertical_swing_select(select::Select *vertical_swing_select) {
@@ -180,33 +148,6 @@ void PanasonicAC::set_nanoex_switch(switch_::Switch *nanoex_switch) {
     if (state == this->nanoex_state_)
       return;
     this->on_nanoex_change(state);
-  });
-}
-
-void PanasonicAC::set_eco_switch(switch_::Switch *eco_switch) {
-  this->eco_switch_ = eco_switch;
-  this->eco_switch_->add_on_state_callback([this](bool state) {
-    if (state == this->eco_state_)
-      return;
-    this->on_eco_change(state);
-  });
-}
-
-void PanasonicAC::set_econavi_switch(switch_::Switch *econavi_switch) {
-  this->econavi_switch_ = econavi_switch;
-  this->econavi_switch_->add_on_state_callback([this](bool state) {
-    if (state == this->econavi_state_)
-      return;
-    this->on_econavi_change(state);
-  });
-}
-
-void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch) {
-  this->mild_dry_switch_ = mild_dry_switch;
-  this->mild_dry_switch_->add_on_state_callback([this](bool state) {
-    if (state == this->mild_dry_state_)
-      return;
-    this->on_mild_dry_change(state);
   });
 }
 

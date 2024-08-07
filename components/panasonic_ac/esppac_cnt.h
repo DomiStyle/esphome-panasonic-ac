@@ -26,13 +26,9 @@ class PanasonicACCNT : public PanasonicAC {
   void on_horizontal_swing_change(const std::string &swing) override;
   void on_vertical_swing_change(const std::string &swing) override;
   void on_nanoex_change(bool nanoex) override;
-  void on_eco_change(bool eco) override;
-  void on_econavi_change(bool eco) override;
-  void on_mild_dry_change(bool mild_dry) override;
 
   void setup() override;
   void loop() override;
-
   void dump_config() override;
  protected:
   ACState state_ = ACState::Initializing;  // Stores the internal state of the AC, used during initialization
@@ -56,15 +52,10 @@ class PanasonicACCNT : public PanasonicAC {
 
   climate::ClimateMode determine_mode(uint8_t mode);
   std::string determine_fan_speed(uint8_t speed);
-
   std::string determine_vertical_swing(uint8_t swing);
   std::string determine_horizontal_swing(uint8_t swing);
-
   std::string determine_preset(uint8_t preset);
   bool determine_preset_nanoex(uint8_t preset);
-  bool determine_eco(uint8_t value);
-  bool determine_econavi(uint8_t value);
-  bool determine_mild_dry(uint8_t value);
   uint16_t determine_power_consumption(uint8_t byte_28, uint8_t multiplier, uint8_t offset);
 };
 

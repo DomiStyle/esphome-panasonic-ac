@@ -170,35 +170,30 @@ void PanasonicACCNT::set_data(bool set) {
 
   std::string preset = determine_preset(this->data[5]);
   bool nanoex = determine_preset_nanoex(this->data[5]);
-  bool eco = determine_eco(this->data[8]);
-  bool econavi = determine_econavi(this->data[5]);
-  bool mildDry = determine_mild_dry(this->data[2]);
   
   this->update_target_temperature((int8_t) this->data[1]);
 
   if (set) {
     // Also set current and outside temperature
-    // 128 means not supported
-    if (this->current_temperature_sensor_ == nullptr) {
-      if(this->rx_buffer_[18] != 0x80)
-        this->update_current_temperature((int8_t)this->rx_buffer_[18]);
-      else if(this->rx_buffer_[21] != 0x80)
-        this->update_current_temperature((int8_t)this->rx_buffer_[21]);
-      else
-        ESP_LOGV(TAG, "Current temperature is not supported");
-    }
+    // 128 means not supported    
+    if(this->rx_buffer_[18] != 0x80)
+      this->update_current_temperature((int8_t)this->rx_buffer_[18]);
+    else if(this->rx_buffer_[21] != 0x80)
+      this->update_current_temperature((int8_t)this->rx_buffer_[21]);
+    else
+      ESP_LOGV(TAG, "Current temperature is not supported");
 
     if (this->outside_temperature_sensor_ != nullptr)
     {
-      if(this->rx_buffer_[19] != 0x80)
+      if (this->rx_buffer_[19] != 0x80)
         this->update_outside_temperature((int8_t)this->rx_buffer_[19]);
-      else if(this->rx_buffer_[22] != 0x80)
+      else if (this->rx_buffer_[22] != 0x80)
         this->update_outside_temperature((int8_t)this->rx_buffer_[22]);
       else
         ESP_LOGV(TAG, "Outside temperature is not supported");
     }
 
-    if(this->current_power_consumption_sensor_ != nullptr) {
+    if (this->current_power_consumption_sensor_ != nullptr) {
       uint16_t power_consumption = determine_power_consumption((int8_t)this->rx_buffer_[28], (int8_t)this->rx_buffer_[29], (int8_t)this->rx_buffer_[30]);
       this->update_current_power_consumption(power_consumption);
     }
@@ -219,9 +214,6 @@ void PanasonicACCNT::set_data(bool set) {
   this->custom_preset = preset;
 
   this->update_nanoex(nanoex);
-  this->update_eco(eco);
-  this->update_econavi(econavi);
-  this->update_mild_dry(mildDry);
 }
 
 /*
@@ -451,41 +443,6 @@ bool PanasonicACCNT::determine_preset_nanoex(uint8_t preset) {
   }
 }
 
-bool PanasonicACCNT::determine_eco(uint8_t value) {
-  if (value == 0x40)
-    return true;
-  else if (value == 0x00)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown eco value");
-    return false;
-  }
-}
-
-bool PanasonicACCNT::determine_econavi(uint8_t value) {
-  uint8_t nib = value & 0x10;
-  
-  if (nib == 0x10)
-    return true;
-  else if (nib == 0x00)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown econavi value");
-    return false;
-  }
-}
-
-bool PanasonicACCNT::determine_mild_dry(uint8_t value) {
-  if (value == 0x7F)
-    return true;
-  else if (value == 0x80)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown mild dry value");
-    return false;
-  }
-}
-
 uint16_t PanasonicACCNT::determine_power_consumption(uint8_t byte_28, uint8_t byte_29, uint8_t offset) {
   return (uint16_t)(byte_28 + (byte_29 * 256)) - offset;
 }
@@ -574,68 +531,6 @@ void PanasonicACCNT::on_nanoex_change(bool state) {
     ESP_LOGV(TAG, "Turning nanoex off");
     this->cmd[5] = (this->cmd[5] & 0x0F);
   }
-}
-
-void PanasonicACCNT::on_eco_change(bool state) {
-  if (this->state_ != ACState::Ready)
-    return;
-
-  if (this->cmd.empty()) {
-    ESP_LOGV(TAG, "Copying data to cmd");
-    this->cmd = this->data;
-  }
-
-  this->eco_state_ = state;
-
-  if (state) {
-    ESP_LOGV(TAG, "Turning eco mode on");
-    this->cmd[8] = 0x40;
-  } else {
-    ESP_LOGV(TAG, "Turning eco mode off");
-    this->cmd[8] = 0x00;
-  }
-}
-
-void PanasonicACCNT::on_econavi_change(bool state) {
-  if (this->state_ != ACState::Ready)
-    return;
-
-  if (this->cmd.empty()) {
-    ESP_LOGV(TAG, "Copying data to cmd");
-    this->cmd = this->data;
-  }
-
-  this->econavi_state_ = state;
-
-  if (state) {
-    ESP_LOGV(TAG, "Turning econavi mode on");
-    this->cmd[5] = 0x10;
-  } else {
-    ESP_LOGV(TAG, "Turning econavi mode off");
-    this->cmd[5] = 0x00;
-  }
-
-}
-
-void PanasonicACCNT::on_mild_dry_change(bool state) {
-  if (this->state_ != ACState::Ready)
-    return;
-
-  if (this->cmd.empty()) {
-    ESP_LOGV(TAG, "Copying data to cmd");
-    this->cmd = this->data;
-  }
-
-  this->mild_dry_state_ = state;
-
-  if (state) {
-    ESP_LOGV(TAG, "Turning mild dry on");
-    this->cmd[2] = 0x7F;
-  } else {
-    ESP_LOGV(TAG, "Turning mild dry off");
-    this->cmd[2] = 0x80;
-  }
-
 }
 
 }  // namespace CNT
