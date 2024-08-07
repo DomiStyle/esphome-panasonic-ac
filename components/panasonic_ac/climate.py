@@ -30,14 +30,17 @@ PanasonicACSelect = panasonic_ac_ns.class_(
     "PanasonicACSelect", select.Select, cg.Component
 )
 
+CONF_SUPPORTED = "supported"
+CONF_SELECTOR = "selector"
+CONF_SWITCH = "switch"
+
 CONF_TRAITS = "traits"
 CONF_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
 CONF_VERTICAL_SWING_MODE = "vertical_swing_mode"
 CONF_NANOEX_MODE = "nanoex_mode"
-CONF_SELECTOR = "selector"
-CONF_SWITCH = "switch"
-CONF_SUPPORTED = "supported"
 
+CONF_SENSORS = "sensors"
+CONF_SENSOR = "sensor"
 CONF_OUTSIDE_TEMPERATURE = "outside_temperature"
 CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 
@@ -89,22 +92,36 @@ TRAITS_SCHEMA = cv.Schema({
     cv.Optional(CONF_NANOEX_MODE): NANOEX_MODE_SCHEMA
 })
 
+OUTSIDE_TEMPERATURE_SENSOR_SCHEMA = cv.Schema({
+    cv.Required(CONF_SUPPORTED): cv.boolean,
+    cv.Optional(CONF_SENSOR): sensor.sensor_schema(
+        unit_of_measurement=UNIT_CELSIUS,
+        accuracy_decimals=0,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT
+    )
+})
+
+CONF_CURRENT_POWER_CONSUMPTION_SCHEMA = cv.Schema({
+    cv.Required(CONF_SUPPORTED): cv.boolean,
+    cv.Optional(CONF_SENSOR): sensor.sensor_schema(
+        unit_of_measurement=UNIT_WATT,
+        accuracy_decimals=0,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT
+    )
+})
+
+SENSORS_SCHEMA = cv.Schema({
+    cv.Optional(CONF_OUTSIDE_TEMPERATURE): OUTSIDE_TEMPERATURE_SENSOR_SCHEMA,
+    cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): CONF_CURRENT_POWER_CONSUMPTION_SCHEMA
+})
+
 CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(PanasonicACCNT),
         cv.Optional(CONF_TRAITS): TRAITS_SCHEMA,
-        cv.Optional(CONF_OUTSIDE_TEMPERATURE): sensor.sensor_schema(
-            unit_of_measurement=UNIT_CELSIUS,
-            accuracy_decimals=0,
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
-            unit_of_measurement=UNIT_WATT,
-            accuracy_decimals=0,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT
-        )
+        cv.Optional(CONF_SENSORS): SENSORS_SCHEMA
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
@@ -144,6 +161,18 @@ async def setup_traits_(panasonic_ac, traits_config):
                 setup_default_icon_(nanoex_switch, nanoex_switch_config, "mdi:air-filter")
                 cg.add(panasonic_ac.set_nanoex_switch(nanoex_switch))
 
+async def setup_sensors_(panasonic_ac, sensors_config):
+    if CONF_OUTSIDE_TEMPERATURE in sensors_config:
+        outside_temp_config = sensors_config[CONF_OUTSIDE_TEMPERATURE]
+        if cv.boolean(outside_temp_config[CONF_SUPPORTED]):
+            outside_temp_sensor = await sensor.new_sensor(outside_temp_config[CONF_SENSOR])
+            cg.add(panasonic_ac.set_outside_temperature_sensor(outside_temp_sensor))
+
+    if CONF_CURRENT_POWER_CONSUMPTION in sensors_config:
+        consumption_config = sensors_config[CONF_CURRENT_POWER_CONSUMPTION]
+        if cv.boolean(consumption_config[CONF_SUPPORTED]):
+            consumption_sensor = await sensor.new_sensor(consumption_config[CONF_SENSOR])
+            cg.add(panasonic_ac.set_current_power_consumption_sensor(consumption_sensor))
 
 async def to_code(config):
     panasonic_ac = cg.new_Pvariable(config[CONF_ID])
@@ -157,11 +186,5 @@ async def to_code(config):
     if CONF_TRAITS in config:
         await setup_traits_(panasonic_ac, config[CONF_TRAITS])
 
-    # legacy codes, should be deleted
-    if CONF_OUTSIDE_TEMPERATURE in config:
-        sens = await sensor.new_sensor(config[CONF_OUTSIDE_TEMPERATURE])
-        cg.add(panasonic_ac.set_outside_temperature_sensor(sens))
-
-    if CONF_CURRENT_POWER_CONSUMPTION in config:
-        sens = await sensor.new_sensor(config[CONF_CURRENT_POWER_CONSUMPTION])
-        cg.add(panasonic_ac.set_current_power_consumption_sensor(sens))
+    if CONF_SENSORS in config:
+        await setup_sensors_(panasonic_ac, config[CONF_SENSORS])

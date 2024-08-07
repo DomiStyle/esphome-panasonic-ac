@@ -45,7 +45,7 @@ external_components:
 climate:
   - platform: panasonic_ac
     name: None
-    traits:
+        traits:
       vertical_swing_mode:
         supported: true
         selector:
@@ -58,3 +58,12 @@ climate:
         supported: true
         switch:
           name: NanoeX
+    sensors:
+      outside_temperature:
+        supported: true
+        sensor:
+          name: Outside Temperature
+      current_power_consumption:
+        supported: true
+        sensor:
+          name: Power Consumption
