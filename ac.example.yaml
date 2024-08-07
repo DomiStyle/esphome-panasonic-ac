@@ -45,7 +45,7 @@ external_components:
 climate:
   - platform: panasonic_ac
     name: None
-        traits:
+    traits:
       vertical_swing_mode:
         supported: true
         selector:
