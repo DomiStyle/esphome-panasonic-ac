@@ -195,8 +195,8 @@ async def setup_traits_(panasonic_ac, traits_config):
 async def to_code(config):
     panasonic_ac = cg.new_Pvariable(config[CONF_ID])
     
-    await climate.register_climate(panasonic_ac, config)
     await cg.register_component(panasonic_ac, config)
+    await climate.register_climate(panasonic_ac, config)
     await uart.register_uart_device(panasonic_ac, config)
     
     setup_default_icon_(panasonic_ac, config, "mdi:air-conditioner")
