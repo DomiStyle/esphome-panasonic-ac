@@ -54,12 +54,7 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
 
   if (call.get_mode().has_value()) {
     climate::ClimateMode mode = *call.get_mode();
-    ESP_LOGV(TAG, "Requested mode change to");
-
-    if (this->mode == climate::CLIMATE_MODE_OFF && this->lastMode.has_value()) {
-      ESP_LOGV(TAG, "Restoring last mode");
-      mode = lastMode.value();
-    }
+    ESP_LOGV(TAG, "Requested mode change");
     
     switch (mode) {
       case climate::CLIMATE_MODE_COOL:
@@ -78,7 +73,6 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
         this->cmd[0] = 0x64;
         break;
       case climate::CLIMATE_MODE_OFF:
-        this->lastMode = this->mode;
         this->cmd[0] = 0x30;
         break;
       default:
