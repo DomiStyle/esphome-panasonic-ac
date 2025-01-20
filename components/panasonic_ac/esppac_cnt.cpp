@@ -318,6 +318,14 @@ void PanasonicACCNT::handle_packet() {
   } else {
     ESP_LOGD(TAG, "Received unknown packet");
   }
+
+  if (data.size() >= 28 && data[13] == 0x00) {
+    this->defrost_status_ = false; // No defrost
+    } else if (data.size() >= 28 && data[13] == 0x02) {
+    this->defrost_status_ = true; // Defrost
+    } else {
+    this->defrost_status_ = false; // Default to no defrost
+    }
 }
 
 climate::ClimateMode PanasonicACCNT::determine_mode(uint8_t mode) {
