@@ -46,6 +46,8 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void setup() override;
   void loop() override;
 
+  bool get_defrost_status() const; // Added
+
  protected:
   sensor::Sensor *outside_temperature_sensor_ = nullptr;        // Sensor to store outside temperature from queries
   select::Select *vertical_swing_select_ = nullptr;             // Select to store manual position of vertical swing
@@ -64,6 +66,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   bool eco_state_ = false;       // Stores the state of eco to prevent duplicate packets
   bool econavi_state_ = false;       // Stores the state of econavi to prevent duplicate packets
   bool mild_dry_state_ = false;  // Stores the state of mild dry to prevent duplicate packets
+  bool defrost_status_ = false; // Added
 
   bool waiting_for_response_ = false;  // Set to true if we are waiting for a response
 
