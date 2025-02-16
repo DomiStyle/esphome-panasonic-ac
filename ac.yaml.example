@@ -57,5 +57,9 @@ climate:
     # current_power_consumption:
     #   name: Panasonic AC Power Consumption
 
+    # Adapt according to your measurements
+    # current_temperature_offset: 0
+    # outside_temperature_offset: 0
+
     # Useful when the ac does not report a current temperature (CZ-TACG1 only)
     # current_temperature_sensor: temperature_sensor_id
