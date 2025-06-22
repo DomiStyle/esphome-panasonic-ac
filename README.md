@@ -9,7 +9,7 @@ An open source alternative for the Panasonic wi-fi adapter that works locally wi
 * Instantly control the AC without any delay like in the Comfort Cloud app
 * Receive live reports and state from the AC
 * Uses the UART interface on the AC instead of the IR interface
-* Provides a drop-in replacement for the Panasonic DNSK-P11 and the CZ-TACG1 wifi module
+* Provides a drop-in replacement for the Panasonic DNSK-P11 and the CZ-TACG1 wifi module and the newest PIOT-V2(WA) module
 
 # Supported hardware
 
