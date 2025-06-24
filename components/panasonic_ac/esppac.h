@@ -13,8 +13,8 @@ namespace panasonic_ac {
 
 static const char *const VERSION = "2.4.0";
 
-static const uint8_t BUFFER_SIZE = 128;  // The maximum size of a single packet (both receive and transmit)
-static const uint8_t READ_TIMEOUT = 20;  // The maximum time to wait before considering a packet complete
+static const uint8_t BUFFER_SIZE = 240;  // The maximum size of a single packet (both receive and transmit)
+static const uint8_t READ_TIMEOUT = 240;  // The maximum time to wait before considering a packet complete
 
 static const uint8_t MIN_TEMPERATURE = 16;     // Minimum temperature as reported by Panasonic app
 static const uint8_t MAX_TEMPERATURE = 30;     // Maximum temperature as supported by Panasonic app
