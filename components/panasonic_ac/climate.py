@@ -45,26 +45,26 @@ HORIZONTAL_SWING_OPTIONS = ["auto", "left", "left_center", "center", "right_cent
 
 VERTICAL_SWING_OPTIONS = ["swing", "auto", "up", "up_center", "center", "down_center", "down"]
 
-SWITCH_SCHEMA = switch.switch_schema(PanasonicACSwitch).extend(cv.COMPONENT_SCHEMA)
+PANASONIC_SWITCH_SCHEMA = switch.switch_schema(PanasonicACSwitch).extend(cv.COMPONENT_SCHEMA)
 
-SELECT_SCHEMA = select.select_schema(PanasonicACSelect)
+PANASONIC_SELECT_SCHEMA = select.select_schema(PanasonicACSelect)
 
 PANASONIC_COMMON_SCHEMA = {
-    cv.Optional(CONF_HORIZONTAL_SWING_SELECT): SELECT_SCHEMA,
-    cv.Optional(CONF_VERTICAL_SWING_SELECT): SELECT_SCHEMA,
+    cv.Optional(CONF_HORIZONTAL_SWING_SELECT): PANASONIC_SELECT_SCHEMA,
+    cv.Optional(CONF_VERTICAL_SWING_SELECT): PANASONIC_SELECT_SCHEMA,
     cv.Optional(CONF_OUTSIDE_TEMPERATURE): sensor.sensor_schema(
         unit_of_measurement=UNIT_CELSIUS,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
+    cv.Optional(CONF_NANOEX_SWITCH): PANASONIC_SWITCH_SCHEMA,
 }
 
 PANASONIC_CNT_SCHEMA = {
-    cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
-    cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
-    cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
+    cv.Optional(CONF_ECO_SWITCH): PANASONIC_SWITCH_SCHEMA,
+    cv.Optional(CONF_ECONAVI_SWITCH): PANASONIC_SWITCH_SCHEMA,
+    cv.Optional(CONF_MILD_DRY_SWITCH): PANASONIC_SWITCH_SCHEMA,
     cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
     cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
