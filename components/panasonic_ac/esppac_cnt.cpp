@@ -1,11 +1,175 @@
 #include "esppac_cnt.h"
 #include "esppac_commands_cnt.h"
 
+#include "esphome/core/log.h"
+
 namespace esphome {
 namespace panasonic_ac {
 namespace CNT {
 
 static const char *const TAG = "panasonic_ac.cz_tacg1";
+
+static climate::ClimateMode determine_mode(uint8_t mode) {
+  uint8_t nib1 = (mode >> 4) & 0x0F;  // Left nib for mode
+  uint8_t nib2 = (mode >> 0) & 0x0F;  // Right nib for power state
+
+  if (nib2 == 0x00)
+    return climate::CLIMATE_MODE_OFF;
+
+  switch (nib1) {
+    case 0x00:  // Auto
+      return climate::CLIMATE_MODE_HEAT_COOL;
+    case 0x03:  // Cool
+      return climate::CLIMATE_MODE_COOL;
+    case 0x04:  // Heat
+      return climate::CLIMATE_MODE_HEAT;
+    case 0x02:  // Dry
+      return climate::CLIMATE_MODE_DRY;
+    case 0x06:  // Fan only
+      return climate::CLIMATE_MODE_FAN_ONLY;
+    default:
+      ESP_LOGW(TAG, "Received unknown climate mode");
+      return climate::CLIMATE_MODE_OFF;
+  }
+}
+
+static const char *determine_fan_speed(uint8_t speed) {
+  switch (speed) {
+    case 0xA0:  // Auto
+      return "Automatic";
+    case 0x30:  // 1
+      return "1";
+    case 0x40:  // 2
+      return "2";
+    case 0x50:  // 3
+      return "3";
+    case 0x60:  // 4
+      return "4";
+    case 0x70:  // 5
+      return "5";
+    default:
+      ESP_LOGW(TAG, "Received unknown fan speed");
+      return "Unknown";
+  }
+}
+
+static const char *determine_vertical_swing(uint8_t swing) {
+  uint8_t nib = (swing >> 4) & 0x0F;  // Left nib for vertical swing
+
+  switch (nib) {
+    case 0x0E:
+      return "swing";
+    case 0x0F:
+      return "auto";
+    case 0x01:
+      return "up";
+    case 0x02:
+      return "up_center";
+    case 0x03:
+      return "center";
+    case 0x04:
+      return "down_center";
+    case 0x05:
+      return "down";
+    case 0x00:
+      return "unsupported";
+    default:
+      ESP_LOGW(TAG, "Received unknown vertical swing mode: 0x%02X", nib);
+      return "Unknown";
+  }
+}
+
+static const char *determine_horizontal_swing(uint8_t swing) {
+  uint8_t nib = (swing >> 0) & 0x0F;  // Right nib for horizontal swing
+
+  switch (nib) {
+    case 0x0D:
+      return "auto";
+    case 0x09:
+      return "left";
+    case 0x0A:
+      return "left_center";
+    case 0x06:
+      return "center";
+    case 0x0B:
+      return "right_center";
+    case 0x0C:
+      return "right";
+    case 0x00:
+      return "unsupported";
+    default:
+      ESP_LOGW(TAG, "Received unknown horizontal swing mode");
+      return "Unknown";
+  }
+}
+
+static const char *determine_preset(uint8_t preset) {
+  uint8_t nib = (preset >> 0) & 0x0F;  // Right nib for preset (powerful/quiet)
+
+  switch (nib) {
+    case 0x02:
+      return "Powerful";
+    case 0x04:
+      return "Quiet";
+    case 0x00:
+      return "Normal";
+    default:
+      ESP_LOGW(TAG, "Received unknown preset");
+      return "Normal";
+  }
+}
+
+static bool determine_preset_nanoex(uint8_t preset) {
+  uint8_t nib = (preset >> 4) & 0x04;  // Left nib for nanoex
+
+  if (nib == 0x04)
+    return true;
+  else if (nib == 0x00)
+    return false;
+  else {
+    ESP_LOGW(TAG, "Received unknown nanoex value");
+    return false;
+  }
+}
+
+static bool determine_eco(uint8_t value) {
+  if (value == 0x40)
+    return true;
+  else if (value == 0x00)
+    return false;
+  else {
+    ESP_LOGW(TAG, "Received unknown eco value");
+    return false;
+  }
+}
+
+static bool determine_econavi(uint8_t value) {
+  uint8_t nib = value & 0x10;
+
+  if (nib == 0x10)
+    return true;
+  else if (nib == 0x00)
+    return false;
+  else {
+    ESP_LOGW(TAG, "Received unknown econavi value");
+    return false;
+  }
+}
+
+static bool determine_mild_dry(uint8_t value) {
+  if (value == 0x7F)
+    return true;
+  else if (value == 0x80)
+    return false;
+  else {
+    ESP_LOGW(TAG, "Received unknown mild dry value");
+    return false;
+  }
+}
+
+uint16_t determine_power_consumption(uint8_t byte_28, uint8_t byte_29, uint8_t offset) {
+  return (uint16_t) (byte_28 + (byte_29 * 256)) - offset;
+}
 
 void PanasonicACCNT::setup() {
   PanasonicAC::setup();
@@ -80,28 +244,27 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
     this->cmd[1] = *call.get_target_temperature() / TEMPERATURE_STEP;
   }
 
-  if (call.get_custom_fan_mode().has_value()) {
+  if (call.has_custom_fan_mode()) {
     ESP_LOGV(TAG, "Requested fan mode change");
 
-    if(this->custom_preset != "Normal")
-    {
+    if (strcmp(this->get_custom_preset(), "Normal") != 0) {
       ESP_LOGV(TAG, "Resetting preset");
       this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
     }
 
-    std::string fanMode = *call.get_custom_fan_mode();
+    const char *fanMode = call.get_custom_fan_mode();
 
-    if (fanMode == "Automatic")
+    if (strcmp(fanMode, "Automatic") == 0)
       this->cmd[3] = 0xA0;
-    else if (fanMode == "1")
+    else if (strcmp(fanMode, "1") == 0)
       this->cmd[3] = 0x30;
-    else if (fanMode == "2")
+    else if (strcmp(fanMode, "2") == 0)
       this->cmd[3] = 0x40;
-    else if (fanMode == "3")
+    else if (strcmp(fanMode, "3") == 0)
       this->cmd[3] = 0x50;
-    else if (fanMode == "4")
+    else if (strcmp(fanMode, "4") == 0)
       this->cmd[3] = 0x60;
-    else if (fanMode == "5")
+    else if (strcmp(fanMode, "5") == 0)
       this->cmd[3] = 0x70;
     else
       ESP_LOGV(TAG, "Unsupported fan mode requested");
@@ -129,21 +292,20 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
     }
   }
 
-  if (call.get_custom_preset().has_value()) {
+  if (call.has_custom_preset()) {
     ESP_LOGV(TAG, "Requested preset change");
 
-    std::string preset = *call.get_custom_preset();
+    const char *preset = call.get_custom_preset();
 
-    if (preset.compare("Normal") == 0)
+    if (strcmp(preset, "Normal") == 0)
       this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
-    else if (preset.compare("Powerful") == 0)
+    else if (strcmp(preset, "Powerful") == 0)
       this->cmd[5] = (this->cmd[5] & 0xF0) + 0x02;  // Clear right nib and set powerful mode
-    else if (preset.compare("Quiet") == 0)
+    else if (strcmp(preset, "Quiet") == 0)
       this->cmd[5] = (this->cmd[5] & 0xF0) + 0x04;  // Clear right nib and set quiet mode
     else
       ESP_LOGV(TAG, "Unsupported preset requested");
   }
-
 }
 
 /*
@@ -151,43 +313,43 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
  */
 void PanasonicACCNT::set_data(bool set) {
   this->mode = determine_mode(this->data[0]);
-  this->custom_fan_mode = determine_fan_speed(this->data[3]);
+  this->set_custom_fan_mode_(determine_fan_speed(this->data[3]));
 
   std::string verticalSwing = determine_vertical_swing(this->data[4]);
   std::string horizontalSwing = determine_horizontal_swing(this->data[4]);
 
-  std::string preset = determine_preset(this->data[5]);
+  const char *preset = determine_preset(this->data[5]);
   bool nanoex = determine_preset_nanoex(this->data[5]);
   bool eco = determine_eco(this->data[8]);
   bool econavi = determine_econavi(this->data[5]);
   bool mildDry = determine_mild_dry(this->data[2]);
-  
+
   this->update_target_temperature((int8_t) this->data[1]);
 
   if (set) {
     // Also set current and outside temperature
     // 128 means not supported
     if (this->current_temperature_sensor_ == nullptr) {
-      if(this->rx_buffer_[18] != 0x80)
-        this->update_current_temperature((int8_t)this->rx_buffer_[18]);
-      else if(this->rx_buffer_[21] != 0x80)
-        this->update_current_temperature((int8_t)this->rx_buffer_[21]);
+      if (this->rx_buffer_[18] != 0x80)
+        this->update_current_temperature((int8_t) this->rx_buffer_[18]);
+      else if (this->rx_buffer_[21] != 0x80)
+        this->update_current_temperature((int8_t) this->rx_buffer_[21]);
       else
         ESP_LOGV(TAG, "Current temperature is not supported");
     }
 
-    if (this->outside_temperature_sensor_ != nullptr)
-    {
-      if(this->rx_buffer_[19] != 0x80)
-        this->update_outside_temperature((int8_t)this->rx_buffer_[19]);
-      else if(this->rx_buffer_[22] != 0x80)
-        this->update_outside_temperature((int8_t)this->rx_buffer_[22]);
+    if (this->outside_temperature_sensor_ != nullptr) {
+      if (this->rx_buffer_[19] != 0x80)
+        this->update_outside_temperature((int8_t) this->rx_buffer_[19]);
+      else if (this->rx_buffer_[22] != 0x80)
+        this->update_outside_temperature((int8_t) this->rx_buffer_[22]);
       else
         ESP_LOGV(TAG, "Outside temperature is not supported");
     }
 
-    if(this->current_power_consumption_sensor_ != nullptr) {
-      uint16_t power_consumption = determine_power_consumption((int8_t)this->rx_buffer_[28], (int8_t)this->rx_buffer_[29], (int8_t)this->rx_buffer_[30]);
+    if (this->current_power_consumption_sensor_ != nullptr) {
+      uint16_t power_consumption = determine_power_consumption(
+          (int8_t) this->rx_buffer_[28], (int8_t) this->rx_buffer_[29], (int8_t) this->rx_buffer_[30]);
       this->update_current_power_consumption(power_consumption);
     }
   }
@@ -204,7 +366,7 @@ void PanasonicACCNT::set_data(bool set) {
   this->update_swing_vertical(verticalSwing);
   this->update_swing_horizontal(horizontalSwing);
 
-  this->custom_preset = preset;
+  this->set_custom_preset_(preset);
 
   this->update_nanoex(nanoex);
   this->update_eco(eco);
@@ -320,168 +482,6 @@ void PanasonicACCNT::handle_packet() {
   }
 }
 
-climate::ClimateMode PanasonicACCNT::determine_mode(uint8_t mode) {
-  uint8_t nib1 = (mode >> 4) & 0x0F;  // Left nib for mode
-  uint8_t nib2 = (mode >> 0) & 0x0F;  // Right nib for power state
-
-  if (nib2 == 0x00)
-    return climate::CLIMATE_MODE_OFF;
-
-  switch (nib1) {
-    case 0x00:  // Auto
-      return climate::CLIMATE_MODE_HEAT_COOL;
-    case 0x03:  // Cool
-      return climate::CLIMATE_MODE_COOL;
-    case 0x04:  // Heat
-      return climate::CLIMATE_MODE_HEAT;
-    case 0x02:  // Dry
-      return climate::CLIMATE_MODE_DRY;
-    case 0x06:  // Fan only
-      return climate::CLIMATE_MODE_FAN_ONLY;
-    default:
-      ESP_LOGW(TAG, "Received unknown climate mode");
-      return climate::CLIMATE_MODE_OFF;
-  }
-}
-
-std::string PanasonicACCNT::determine_fan_speed(uint8_t speed) {
-  switch (speed) {
-    case 0xA0:  // Auto
-      return "Automatic";
-    case 0x30:  // 1
-      return "1";
-    case 0x40:  // 2
-      return "2";
-    case 0x50:  // 3
-      return "3";
-    case 0x60:  // 4
-      return "4";
-    case 0x70:  // 5
-      return "5";
-    default:
-      ESP_LOGW(TAG, "Received unknown fan speed");
-      return "Unknown";
-  }
-}
-
-std::string PanasonicACCNT::determine_vertical_swing(uint8_t swing) {
-  uint8_t nib = (swing >> 4) & 0x0F;  // Left nib for vertical swing
-
-  switch (nib) {
-    case 0x0E:
-      return "swing";
-    case 0x0F:
-      return "auto";
-    case 0x01:
-      return "up";
-    case 0x02:
-      return "up_center";
-    case 0x03:
-      return "center";
-    case 0x04:
-      return "down_center";
-    case 0x05:
-      return "down";
-    case 0x00:
-      return "unsupported";
-    default:
-      ESP_LOGW(TAG, "Received unknown vertical swing mode: 0x%02X", nib);
-      return "Unknown";
-  }
-}
-
-std::string PanasonicACCNT::determine_horizontal_swing(uint8_t swing) {
-  uint8_t nib = (swing >> 0) & 0x0F;  // Right nib for horizontal swing
-
-  switch (nib) {
-    case 0x0D:
-      return "auto";
-    case 0x09:
-      return "left";
-    case 0x0A:
-      return "left_center";
-    case 0x06:
-      return "center";
-    case 0x0B:
-      return "right_center";
-    case 0x0C:
-      return "right";
-    case 0x00:
-      return "unsupported";
-    default:
-      ESP_LOGW(TAG, "Received unknown horizontal swing mode");
-      return "Unknown";
-  }
-}
-
-std::string PanasonicACCNT::determine_preset(uint8_t preset) {
-  uint8_t nib = (preset >> 0) & 0x0F;  // Right nib for preset (powerful/quiet)
-
-  switch (nib) {
-    case 0x02:
-      return "Powerful";
-    case 0x04:
-      return "Quiet";
-    case 0x00:
-      return "Normal";
-    default:
-      ESP_LOGW(TAG, "Received unknown preset");
-      return "Normal";
-  }
-}
-
-bool PanasonicACCNT::determine_preset_nanoex(uint8_t preset) {
-  uint8_t nib = (preset >> 4) & 0x04;  // Left nib for nanoex
-
-  if (nib == 0x04)
-    return true;
-  else if (nib == 0x00)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown nanoex value");
-    return false;
-  }
-}
-
-bool PanasonicACCNT::determine_eco(uint8_t value) {
-  if (value == 0x40)
-    return true;
-  else if (value == 0x00)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown eco value");
-    return false;
-  }
-}
-
-bool PanasonicACCNT::determine_econavi(uint8_t value) {
-  uint8_t nib = value & 0x10;
-  
-  if (nib == 0x10)
-    return true;
-  else if (nib == 0x00)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown econavi value");
-    return false;
-  }
-}
-
-bool PanasonicACCNT::determine_mild_dry(uint8_t value) {
-  if (value == 0x7F)
-    return true;
-  else if (value == 0x80)
-    return false;
-  else {
-    ESP_LOGW(TAG, "Received unknown mild dry value");
-    return false;
-  }
-}
-
-uint16_t PanasonicACCNT::determine_power_consumption(uint8_t byte_28, uint8_t byte_29, uint8_t offset) {
-  return (uint16_t)(byte_28 + (byte_29 * 256)) - offset;
-}
-
 /*
  * Sensor handling
  */
@@ -515,7 +515,6 @@ void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
     ESP_LOGW(TAG, "Unsupported vertical swing position received");
     return;
   }
-
 }
 
 void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
@@ -545,7 +544,6 @@ void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
     ESP_LOGW(TAG, "Unsupported horizontal swing position received");
     return;
   }
-
 }
 
 void PanasonicACCNT::on_nanoex_change(bool state) {
@@ -606,7 +604,6 @@ void PanasonicACCNT::on_econavi_change(bool state) {
     ESP_LOGV(TAG, "Turning econavi mode off");
     this->cmd[5] = 0x00;
   }
-
 }
 
 void PanasonicACCNT::on_mild_dry_change(bool state) {
@@ -627,7 +624,6 @@ void PanasonicACCNT::on_mild_dry_change(bool state) {
     ESP_LOGV(TAG, "Turning mild dry off");
     this->cmd[2] = 0x80;
   }
-
 }
 
 }  // namespace CNT
