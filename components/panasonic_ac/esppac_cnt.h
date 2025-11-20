@@ -10,7 +10,7 @@ static const uint8_t CTRL_HEADER = 0xF0;  // The header for control frames
 static const uint8_t POLL_HEADER = 0x70;  // The header for the poll command
 
 static const int POLL_INTERVAL = 5000;  // The interval at which to poll the AC
-static const int CMD_INTERVAL = 250;  // The interval at which to send commands
+static const int CMD_INTERVAL = 250;    // The interval at which to send commands
 
 enum class ACState {
   Initializing,  // Before first query response is receive
@@ -36,7 +36,7 @@ class PanasonicACCNT : public PanasonicAC {
 
   // uint8_t data[10];
   std::vector<uint8_t> data = std::vector<uint8_t>(10);  // Stores the data received from the AC
-  std::vector<uint8_t> cmd;  // Used to build next command
+  std::vector<uint8_t> cmd;                              // Used to build next command
 
   void handle_poll();
   void handle_cmd();
@@ -48,19 +48,6 @@ class PanasonicACCNT : public PanasonicAC {
 
   bool verify_packet();
   void handle_packet();
-
-  climate::ClimateMode determine_mode(uint8_t mode);
-  std::string determine_fan_speed(uint8_t speed);
-
-  std::string determine_vertical_swing(uint8_t swing);
-  std::string determine_horizontal_swing(uint8_t swing);
-
-  std::string determine_preset(uint8_t preset);
-  bool determine_preset_nanoex(uint8_t preset);
-  bool determine_eco(uint8_t value);
-  bool determine_econavi(uint8_t value);
-  bool determine_mild_dry(uint8_t value);
-  uint16_t determine_power_consumption(uint8_t byte_28, uint8_t multiplier, uint8_t offset);
 };
 
 }  // namespace CNT
