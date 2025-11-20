@@ -1,0 +1,93 @@
+esphome:
+  name: panasonc-ac-baby
+  friendly_name: Panasonic AC Baby
+  #platformio_options:
+    #board_build.f_flash: 40000000L
+    #board_build.flash_mode: dio
+    #board_build.flash_size: 4MB
+    #alt
+    #board_build.f_flash: 80000000L
+    #board_build.flash_mode: qio
+
+esp32:
+  variant: ESP32S3
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Yn8eAYrpKWzBk7Fu7UUasH/s2IgGk3+QXspd4mHErC4="
+
+ota:
+  - platform: esphome
+    password: "d56dd18483f04063893dbdf4ca8af484"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  #power_save_mode: none
+  manual_ip:
+    static_ip: 192.168.1.204
+    gateway: 192.168.1.254
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Panasonic-Ac-Baby"
+    password: "PDIZ24auTDeF"
+
+captive_portal:
+
+# To have a "next url" for improv serial
+web_server:
+
+# Requires ESPHome 1.15.0+ for the even parity option
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO2
+  baud_rate: 9600
+  parity: EVEN
+
+external_components:
+  source: github://DomiStyle/esphome-panasonic-ac
+  components: [panasonic_ac]
+
+climate:
+  - platform: panasonic_ac
+    # For CZ-TACG1
+    type: cnt
+
+    name: Panasonic AC Baby
+    vertical_swing_select:
+      name: Panasonic AC Vertical Swing Mode
+    outside_temperature:
+      name: Panasonic AC Outside Temperature
+
+    # Enable as needed
+    eco_switch:
+      name: Panasonic AC Eco Switch
+    # econavi_switch:
+    #   name: Panasonic AC Econavi Switch
+    # nanoex_switch:
+    #   name: Panasonic AC NanoeX Switch
+    # mild_dry_switch:
+    #   name: Panasonic AC Mild Dry Switch
+    current_power_consumption:
+      name: Panasonic AC Power Consumption
+
+    # Useful when the ac does not report a current temperature (CZ-TACG1 only)
+    current_temperature_sensor: broadlinkmini
+
+sensor:
+  - platform: homeassistant
+    name: "Baby Room Temp Sensor"
+    entity_id: sensor.broadlink_rm4_mini_temperature
+    id: broadlinkmini
+    internal: True
+    
