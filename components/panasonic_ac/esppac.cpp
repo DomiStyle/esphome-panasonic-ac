@@ -10,10 +10,11 @@ static const char *const TAG = "panasonic_ac";
 climate::ClimateTraits PanasonicAC::traits() {
   auto traits = climate::ClimateTraits();
 
-  traits.set_supports_action(false);
+  traits.add_feature_flags(
+      climate::CLIMATE_SUPPORTS_ACTION |
+      climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE
+  );
 
-  traits.set_supports_current_temperature(true);
-  traits.set_supports_two_point_target_temperature(false);
   traits.set_visual_min_temperature(MIN_TEMPERATURE);
   traits.set_visual_max_temperature(MAX_TEMPERATURE);
   traits.set_visual_temperature_step(TEMPERATURE_STEP);
@@ -94,7 +95,7 @@ void PanasonicAC::update_swing_horizontal(const std::string &swing) {
   this->horizontal_swing_state_ = swing;
 
   if (this->horizontal_swing_select_ != nullptr &&
-      this->horizontal_swing_select_->state != this->horizontal_swing_state_) {
+      this->horizontal_swing_state_.compare(this->horizontal_swing_select_->current_option())) {
     this->horizontal_swing_select_->publish_state(
         this->horizontal_swing_state_);  // Set current horizontal swing position
   }
@@ -103,8 +104,10 @@ void PanasonicAC::update_swing_horizontal(const std::string &swing) {
 void PanasonicAC::update_swing_vertical(const std::string &swing) {
   this->vertical_swing_state_ = swing;
 
-  if (this->vertical_swing_select_ != nullptr && this->vertical_swing_select_->state != this->vertical_swing_state_)
+  if (this->vertical_swing_select_ != nullptr &&
+      this->vertical_swing_state_.compare(this->vertical_swing_select_->current_option())) {
     this->vertical_swing_select_->publish_state(this->vertical_swing_state_);  // Set current vertical swing position
+  }
 }
 
 void PanasonicAC::update_nanoex(bool nanoex) {
