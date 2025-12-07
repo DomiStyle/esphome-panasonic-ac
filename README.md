@@ -70,6 +70,26 @@ In order to find out which features are supported by your AC, check the remote t
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 **current_power_consumption is just as ESTIMATED value by the AC**
 
+## Setting temperature offsets
+
+As the internal sensors reading might not reflect the actual temperature in the room or outside, you can optionally define a fixed offset for both sensors.
+This offset is internally applied to both, the reported temperature in ESPHome/HomeAssistant as well as to the target temperature. Any shown values always include the defined offset.
+
+- Temperature readings of the AC will be reported as (reading + offset)
+- Target temperatures will be set as (target - offset)
+
+```
+    # Adapt according to your measurements
+    current_temperature_offset: 0 
+    outside_temperature_offset: 0
+```
+
+Examples:
+- If the temperature is actually higher than measured by the AC, set the difference as a positive offset.
+  - E.g. actual temperature = 23°, AC measured temperature = 20° --> offset = 3°
+- If the temperature is actually lower than measured by the AC, set the difference as a negative offset.
+  - E.g. actual temperature = 20°, AC measured temperature = 22° --> offset = -2°
+
 # Hardware installation
 
 [Hardware installation for DNSK-P11](README.DNSKP11.md)

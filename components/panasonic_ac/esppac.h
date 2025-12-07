@@ -33,6 +33,7 @@ enum class ACType {
 class PanasonicAC : public Component, public uart::UARTDevice, public climate::Climate {
  public:
   void set_outside_temperature_sensor(sensor::Sensor *outside_temperature_sensor);
+  void set_outside_temperature_offset(int8_t outside_temperature_offset);
   void set_vertical_swing_select(select::Select *vertical_swing_select);
   void set_horizontal_swing_select(select::Select *horizontal_swing_select);
   void set_nanoex_switch(switch_::Switch *nanoex_switch);
@@ -42,6 +43,7 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   void set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor);
 
   void set_current_temperature_sensor(sensor::Sensor *current_temperature_sensor);
+  void set_current_temperature_offset(int8_t current_temperature_offset);
 
   void setup() override;
   void loop() override;
@@ -60,6 +62,8 @@ class PanasonicAC : public Component, public uart::UARTDevice, public climate::C
   std::string vertical_swing_state_;
   std::string horizontal_swing_state_;
 
+  int8_t current_temperature_offset_ = 0;  // current temperature offset to compensate internal sensor values
+  int8_t outside_temperature_offset_ = 0;  // outside temperature offset to compensate internal sensor values
   bool nanoex_state_ = false;    // Stores the state of nanoex to prevent duplicate packets
   bool eco_state_ = false;       // Stores the state of eco to prevent duplicate packets
   bool econavi_state_ = false;       // Stores the state of econavi to prevent duplicate packets
