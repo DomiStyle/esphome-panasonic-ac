@@ -1,6 +1,7 @@
 esphome:
   name: panasonic-ac
-  platform: ESP32
+
+esp32:
   board: nodemcu-32s
 
 wifi:
@@ -14,6 +15,7 @@ logger:
 api:
 
 ota:
+  platform: esphome
 
 # Requires ESPHome 1.15.0+ for the even parity option
 uart:

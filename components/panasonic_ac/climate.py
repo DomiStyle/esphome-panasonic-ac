@@ -1,5 +1,4 @@
 from esphome.const import (
-    CONF_ID,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
@@ -42,68 +41,49 @@ CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 CONF_WLAN = "wlan"
 CONF_CNT = "cnt"
 
-HORIZONTAL_SWING_OPTIONS = [
-    "auto",
-    "left",
-    "left_center",
-    "center",
-    "right_center",
-    "right",
-]
-
+HORIZONTAL_SWING_OPTIONS = ["auto", "left", "left_center", "center", "right_center", "right"]
 
 VERTICAL_SWING_OPTIONS = ["swing", "auto", "up", "up_center", "center", "down_center", "down"]
 
-SWITCH_SCHEMA = switch.switch_schema(PanasonicACSwitch).extend(cv.COMPONENT_SCHEMA).extend(
-    {cv.GenerateID(): cv.declare_id(PanasonicACSwitch)}
-)
-SELECT_SCHEMA = select.select_schema(PanasonicACSelect).extend(
-    {cv.GenerateID(CONF_ID): cv.declare_id(PanasonicACSelect)}
-)
+SWITCH_SCHEMA = switch.switch_schema(PanasonicACSwitch).extend(cv.COMPONENT_SCHEMA)
 
-SCHEMA = climate.climate_schema(PanasonicAC).extend(
-    {
-        cv.Optional(CONF_HORIZONTAL_SWING_SELECT): SELECT_SCHEMA,
-        cv.Optional(CONF_VERTICAL_SWING_SELECT): SELECT_SCHEMA,
-        cv.Optional(CONF_OUTSIDE_TEMPERATURE): sensor.sensor_schema(
-            unit_of_measurement=UNIT_CELSIUS,
-            accuracy_decimals=0,
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
-    }
-).extend(uart.UART_DEVICE_SCHEMA)
+SELECT_SCHEMA = select.select_schema(PanasonicACSelect)
+
+PANASONIC_COMMON_SCHEMA = {
+    cv.Optional(CONF_HORIZONTAL_SWING_SELECT): SELECT_SCHEMA,
+    cv.Optional(CONF_VERTICAL_SWING_SELECT): SELECT_SCHEMA,
+    cv.Optional(CONF_OUTSIDE_TEMPERATURE): sensor.sensor_schema(
+        unit_of_measurement=UNIT_CELSIUS,
+        accuracy_decimals=0,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
+}
+
+PANASONIC_CNT_SCHEMA = {
+    cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
+    cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
+    cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
+    cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
+    cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
+        unit_of_measurement=UNIT_WATT,
+        accuracy_decimals=0,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+}
 
 CONFIG_SCHEMA = cv.typed_schema(
     {
-        CONF_WLAN: SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(PanasonicACWLAN),
-            }
-        ),
-        CONF_CNT: SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(PanasonicACCNT),
-                cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
-                cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
-                cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
-                cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
-                cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
-                  unit_of_measurement=UNIT_WATT,
-                  accuracy_decimals=0,
-                  device_class=DEVICE_CLASS_POWER,
-                  state_class=STATE_CLASS_MEASUREMENT,
-              ),
-            }
-        ),
+        CONF_WLAN: climate.climate_schema(PanasonicACWLAN).extend(PANASONIC_COMMON_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
+        CONF_CNT: climate.climate_schema(PanasonicACCNT).extend(PANASONIC_COMMON_SCHEMA).extend(PANASONIC_CNT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
     }
 )
 
 
 async def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
-    await climate.register_climate(var, config)
+    var = await climate.new_climate(config)
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
 
@@ -126,9 +106,8 @@ async def to_code(config):
     for s in [CONF_ECO_SWITCH, CONF_NANOEX_SWITCH, CONF_MILD_DRY_SWITCH, CONF_ECONAVI_SWITCH]:
         if s in config:
             conf = config[s]
-            a_switch = cg.new_Pvariable(conf[CONF_ID])
+            a_switch = await switch.new_switch(conf)
             await cg.register_component(a_switch, conf)
-            await switch.register_switch(a_switch, conf)
             cg.add(getattr(var, f"set_{s}")(a_switch))
 
     if CONF_CURRENT_TEMPERATURE_SENSOR in config:
