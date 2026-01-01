@@ -61,7 +61,7 @@ PANASONIC_COMMON_SCHEMA = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     cv.Optional(CONF_NANOEX_SWITCH): SWITCH_SCHEMA,
-    cv.Optional(CONF_OUTSIDE_TEMPERATURE_OFFSET): cv.int_range(min=-5, max=5),
+    cv.Optional(CONF_OUTSIDE_TEMPERATURE_OFFSET): cv.int_range(min=-15, max=15),
 }
 
 PANASONIC_CNT_SCHEMA = {
@@ -69,7 +69,7 @@ PANASONIC_CNT_SCHEMA = {
     cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
     cv.Optional(CONF_MILD_DRY_SWITCH): SWITCH_SCHEMA,
     cv.Optional(CONF_CURRENT_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
-    cv.Optional(CONF_CURRENT_TEMPERATURE_OFFSET): cv.int_range(min=-5, max=5),
+    cv.Optional(CONF_CURRENT_TEMPERATURE_OFFSET): cv.int_range(min=-15, max=15),
     cv.Optional(CONF_CURRENT_POWER_CONSUMPTION): sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
         accuracy_decimals=0,
