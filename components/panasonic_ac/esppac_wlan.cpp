@@ -31,6 +31,14 @@ void PanasonicACWLAN::loop() {
   {
     log_packet(this->rx_buffer_);
 
+    // Check for defrost status packet
+    if (this->rx_buffer_[0] == 0x70 && this->rx_buffer_.size() >= 15) {
+      bool defrost = (this->rx_buffer_[14] == 0x02);
+      update_defrost(defrost);
+      this->rx_buffer_.clear();
+      return;
+    }
+
     if (!verify_packet())  // Verify length, header, counter and checksum
       return;
 

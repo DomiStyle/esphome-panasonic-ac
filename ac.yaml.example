@@ -44,6 +44,8 @@ climate:
       name: Panasonic AC Vertical Swing Mode
     outside_temperature:
       name: Panasonic AC Outside Temperature
+    defrost_sensor:
+      name: Panasonic AC Defrost Status
 
     # Enable as needed
     # eco_switch:
