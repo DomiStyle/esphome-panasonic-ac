@@ -476,6 +476,11 @@ void PanasonicACCNT::handle_packet() {
     this->set_data(true);
     this->publish_state();
 
+    if (this->rx_buffer_.size() >= 15) {
+      bool defrost = (this->rx_buffer_[14] == 0x02);
+      update_defrost(defrost);
+    }
+
     if (this->state_ != ACState::Ready)
       this->state_ = ACState::Ready;  // Mark as ready after first poll
   } else {
