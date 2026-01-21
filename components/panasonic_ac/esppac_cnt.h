@@ -21,8 +21,8 @@ class PanasonicACCNT : public PanasonicAC {
  public:
   void control(const climate::ClimateCall &call) override;
 
-  void on_horizontal_swing_change(const std::string &swing) override;
-  void on_vertical_swing_change(const std::string &swing) override;
+  void on_horizontal_swing_change(const StringRef &swing) override;
+  void on_vertical_swing_change(const StringRef &swing) override;
   void on_nanoex_change(bool nanoex) override;
   void on_eco_change(bool eco) override;
   void on_econavi_change(bool eco) override;
