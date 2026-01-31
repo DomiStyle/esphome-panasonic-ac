@@ -248,24 +248,24 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   if (call.has_custom_fan_mode()) {
     ESP_LOGV(TAG, "Requested fan mode change");
 
-    if (strcmp(this->get_custom_preset(), "Normal") != 0) {
+    if (this->get_custom_preset() != "Normal") {
       ESP_LOGV(TAG, "Resetting preset");
       this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
     }
 
-    const char *fanMode = call.get_custom_fan_mode();
+    const auto fanMode = call.get_custom_fan_mode();
 
-    if (strcmp(fanMode, "Automatic") == 0)
+    if (fanMode == "Automatic")
       this->cmd[3] = 0xA0;
-    else if (strcmp(fanMode, "1") == 0)
+    else if (fanMode == "1")
       this->cmd[3] = 0x30;
-    else if (strcmp(fanMode, "2") == 0)
+    else if (fanMode == "2")
       this->cmd[3] = 0x40;
-    else if (strcmp(fanMode, "3") == 0)
+    else if (fanMode == "3")
       this->cmd[3] = 0x50;
-    else if (strcmp(fanMode, "4") == 0)
+    else if (fanMode == "4")
       this->cmd[3] = 0x60;
-    else if (strcmp(fanMode, "5") == 0)
+    else if (fanMode == "5")
       this->cmd[3] = 0x70;
     else
       ESP_LOGV(TAG, "Unsupported fan mode requested");
@@ -296,13 +296,13 @@ void PanasonicACCNT::control(const climate::ClimateCall &call) {
   if (call.has_custom_preset()) {
     ESP_LOGV(TAG, "Requested preset change");
 
-    const char *preset = call.get_custom_preset();
+    const auto preset = call.get_custom_preset();
 
-    if (strcmp(preset, "Normal") == 0)
+    if (preset == "Normal")
       this->cmd[5] = (this->cmd[5] & 0xF0);  // Clear right nib for normal mode
-    else if (strcmp(preset, "Powerful") == 0)
+    else if (preset == "Powerful")
       this->cmd[5] = (this->cmd[5] & 0xF0) + 0x02;  // Clear right nib and set powerful mode
-    else if (strcmp(preset, "Quiet") == 0)
+    else if (preset == "Quiet")
       this->cmd[5] = (this->cmd[5] & 0xF0) + 0x04;  // Clear right nib and set quiet mode
     else
       ESP_LOGV(TAG, "Unsupported preset requested");
@@ -316,8 +316,8 @@ void PanasonicACCNT::set_data(bool set) {
   this->mode = determine_mode(this->data[0]);
   this->set_custom_fan_mode_(determine_fan_speed(this->data[3]));
 
-  std::string verticalSwing = determine_vertical_swing(this->data[4]);
-  std::string horizontalSwing = determine_horizontal_swing(this->data[4]);
+  StringRef verticalSwing(determine_vertical_swing(this->data[4]));
+  StringRef horizontalSwing(determine_horizontal_swing(this->data[4]));
 
   const char *preset = determine_preset(this->data[5]);
   bool nanoex = determine_preset_nanoex(this->data[5]);
@@ -487,7 +487,7 @@ void PanasonicACCNT::handle_packet() {
  * Sensor handling
  */
 
-void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
+void PanasonicACCNT::on_vertical_swing_change(const StringRef &swing) {
   if (this->state_ != ACState::Ready)
     return;
 
@@ -518,7 +518,7 @@ void PanasonicACCNT::on_vertical_swing_change(const std::string &swing) {
   }
 }
 
-void PanasonicACCNT::on_horizontal_swing_change(const std::string &swing) {
+void PanasonicACCNT::on_horizontal_swing_change(const StringRef &swing) {
   if (this->state_ != ACState::Ready)
     return;
 
