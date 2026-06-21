@@ -178,6 +178,12 @@ void PanasonicAC::update_current_power_consumption(int16_t power) {
   }
 }
 
+void PanasonicAC::update_defrost(bool defrost) {
+  if (this->defrost_sensor_ != nullptr) {
+    this->defrost_sensor_->publish_state(defrost);
+  }
+}
+
 /*
  * Sensor handling
  */
@@ -271,6 +277,10 @@ void PanasonicAC::set_mild_dry_switch(switch_::Switch *mild_dry_switch) {
 
 void PanasonicAC::set_current_power_consumption_sensor(sensor::Sensor *current_power_consumption_sensor) {
   this->current_power_consumption_sensor_ = current_power_consumption_sensor;
+}
+
+void PanasonicAC::set_defrost_sensor(binary_sensor::BinarySensor *defrost_sensor) {
+  this->defrost_sensor_ = defrost_sensor;
 }
 
 /*

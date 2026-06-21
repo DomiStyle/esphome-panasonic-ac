@@ -353,6 +353,15 @@ void PanasonicACCNT::set_data(bool set) {
           (int8_t) this->rx_buffer_[28], (int8_t) this->rx_buffer_[29], (int8_t) this->rx_buffer_[30]);
       this->update_current_power_consumption(power_consumption);
     }
+
+    if (this->defrost_sensor_ != nullptr) {
+      if (this->rx_buffer_.size() >= 15) {
+        bool defrost = (this->rx_buffer_[14] == 0x02);
+        update_defrost(defrost);
+      } else {
+        ESP_LOGV(TAG, "Defrost status is not supported");
+      }
+    }
   }
 
   if (verticalSwing == "auto" && horizontalSwing == "auto")
