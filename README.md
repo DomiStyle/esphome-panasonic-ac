@@ -70,6 +70,17 @@ In order to find out which features are supported by your AC, check the remote t
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 **current_power_consumption is just as ESTIMATED value by the AC**
 
+## Defrost sensor
+
+The AC reports its defrost status, which can be exposed as an optional binary sensor. The sensor turns `on` while the outdoor unit is defrosting and works with both the CN-CNT and the CN-WLAN port:
+
+```
+    defrost_sensor:
+      name: Panasonic AC Defrost Status
+```
+
+Remove these lines from your `ac.yaml` if you don't need the sensor. Not every unit reports the defrost status; if yours doesn't, the sensor will stay unavailable and `Defrost status is not supported` is logged at verbose level.
+
 ## Setting temperature offsets
 
 As the internal sensors reading might not reflect the actual temperature in the room or outside, you can optionally define a fixed offset for both sensors.
