@@ -431,6 +431,10 @@ void PanasonicACCNT::handle_cmd() {
   if (!this->cmd.empty() && millis() - this->last_packet_sent_ > CMD_INTERVAL) {
     ESP_LOGV(TAG, "Sending Command");
     send_command(this->cmd, CommandType::Normal, CTRL_HEADER);
+    // Assume the command was applied until the next poll reports the real state.
+    // Otherwise a follow-up control() before that poll would copy the stale state
+    // from this->data into cmd and revert this command (e.g. mode HEAT -> OFF).
+    this->data = this->cmd;
     this->cmd.clear();
   }
 }
