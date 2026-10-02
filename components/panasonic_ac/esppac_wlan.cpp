@@ -203,7 +203,7 @@ void PanasonicACWLAN::control(const climate::ClimateCall &call) {
 void PanasonicACWLAN::handle_poll() {
   if (this->state_ == ACState::Ready && millis() - this->last_packet_sent_ > POLL_INTERVAL) {
     ESP_LOGV(TAG, "Polling AC");
-    send_command(CMD_POLL, sizeof(CMD_POLL));
+    this->send_poll();
   }
 }
 
@@ -225,7 +225,7 @@ void PanasonicACWLAN::handle_init_packets() {
              millis() - this->last_packet_sent_ > FIRST_POLL_TIMEOUT)  // Handle sending first poll
   {
     ESP_LOGD(TAG, "Polling for the first time");
-    send_command(CMD_POLL, sizeof(CMD_POLL));
+    this->send_poll();
 
     this->state_ = ACState::HandshakeEnding;
   } else if (this->state_ == ACState::HandshakeEnding &&
@@ -314,7 +314,7 @@ static climate::ClimateMode determine_mode(uint8_t mode) {
     case 0x45:  // Fan only?
       return climate::CLIMATE_MODE_FAN_ONLY;
     default:
-      ESP_LOGW(TAG, "Received unknown climate mode");
+      ESP_LOGW(TAG, "Received unknown climate mode (0x%02X)", mode);
       return climate::CLIMATE_MODE_OFF;
   }
 }
@@ -334,7 +334,7 @@ static const char *determine_fan_speed(uint8_t speed) {
     case 0x41:  // Auto
       return "Automatic";
     default:
-      ESP_LOGW(TAG, "Received unknown fan speed");
+      ESP_LOGW(TAG, "Received unknown fan speed (0x%02X)", speed);
       return "Unknown";
   }
 }
@@ -348,7 +348,7 @@ static const char *determine_preset(uint8_t preset) {
     case 0x41:  // Normal
       return "Normal";
     default:
-      ESP_LOGW(TAG, "Received unknown preset");
+      ESP_LOGW(TAG, "Received unknown preset (0x%02X)", preset);
       return "Normal";
   }
 }
@@ -366,7 +366,7 @@ static const char *determine_swing_vertical(uint8_t swing) {
     case 0x41:  // Up
       return "up";
     default:
-      ESP_LOGW(TAG, "Received unknown vertical swing position");
+      ESP_LOGW(TAG, "Received unknown vertical swing position (0x%02X)", swing);
       return "Unknown";
   }
 }
@@ -384,7 +384,7 @@ static const char *determine_swing_horizontal(uint8_t swing) {
     case 0x41:  // Right
       return "right";
     default:
-      ESP_LOGW(TAG, "Received unknown horizontal swing position");
+      ESP_LOGW(TAG, "Received unknown horizontal swing position (0x%02X)", swing);
       return "Unknown";
   }
 }
@@ -400,7 +400,7 @@ static climate::ClimateSwingMode determine_swing(uint8_t swing) {
     case 0x44:  // Horizontal
       return climate::CLIMATE_SWING_HORIZONTAL;
     default:
-      ESP_LOGW(TAG, "Received unknown swing mode");
+      ESP_LOGW(TAG, "Received unknown swing mode (0x%02X)", swing);
       return climate::CLIMATE_SWING_OFF;
   }
 }
@@ -427,40 +427,11 @@ void PanasonicACWLAN::handle_packet() {
   {
     ESP_LOGD(TAG, "Received query response");
 
-    if (this->rx_buffer_.size() != 125) {
-      ESP_LOGW(TAG, "Received invalid query response");
+    if (this->rx_buffer_.size() < 12) {
+      ESP_LOGW(TAG, "Received too short query response (size: %d)", this->rx_buffer_.size());
       return;
     }
-
-    if (this->rx_buffer_[14] == 0x31)          // Check if power state is off
-      this->mode = climate::CLIMATE_MODE_OFF;  // Climate is off
-    else {
-      this->mode = determine_mode(this->rx_buffer_[18]);  // Check mode if power state is not off
-    }
-
-    update_target_temperature((int8_t) this->rx_buffer_[22]);
-    update_current_temperature((int8_t) this->rx_buffer_[62]);
-    update_outside_temperature((int8_t) this->rx_buffer_[66]);  // Set current (outside) temperature
-
-    StringRef horizontalSwing(determine_swing_horizontal(this->rx_buffer_[34]));
-    StringRef verticalSwing(determine_swing_vertical(this->rx_buffer_[38]));
-
-    update_swing_horizontal(horizontalSwing);
-    update_swing_vertical(verticalSwing);
-
-    bool nanoex = determine_nanoex(this->rx_buffer_[50]);
-
-    update_nanoex(nanoex);
-
-    this->set_custom_fan_mode_(determine_fan_speed(this->rx_buffer_[26]));
-    this->set_custom_preset_(determine_preset(this->rx_buffer_[42]));
-
-    this->swing_mode = determine_swing(this->rx_buffer_[30]);
-
-    // climate::ClimateAction action = determine_action(); // Determine the current action of the AC
-    // this->action = action;
-
-    this->publish_state();
+    this->decode_properties();
   } else if (this->rx_buffer_[2] == 0x10 && this->rx_buffer_[3] == 0x88)  // Command ack
   {
     ESP_LOGV(TAG, "Received command ack");
@@ -469,87 +440,11 @@ void PanasonicACWLAN::handle_packet() {
     ESP_LOGV(TAG, "Received report");
     send_command(CMD_REPORT_ACK, sizeof(CMD_REPORT_ACK), CommandType::Response);
 
-    if (this->rx_buffer_.size() < 13) {
-      ESP_LOGE(TAG, "Report is too short to handle");
+    if (this->rx_buffer_.size() < 12) {
+      ESP_LOGE(TAG, "Report is too short to handle (size: %d)", this->rx_buffer_.size());
       return;
     }
-
-    // 0 = Header & packet type
-    // 1 = Packet length
-    // 2 = Key value pair counter
-    for (int i = 0; i < this->rx_buffer_[10]; i++) {
-      // Offset everything by header, packet length and pair counter (4 * 3)
-      // then offset by pair length (i * 4)
-      int currentIndex = (4 * 3) + (i * 4);
-
-      // 0 = Header
-      // 1 = Data
-      // 2 = Data
-      // 3 = ?
-      switch (this->rx_buffer_[currentIndex]) {
-        case 0x80:  // Power mode
-          switch (this->rx_buffer_[currentIndex + 2]) {
-            case 0x30:  // Power mode on
-              ESP_LOGV(TAG, "Received power mode on");
-              // Ignore power on and let mode be set by other report
-              break;
-            case 0x31:  // Power mode off
-              ESP_LOGV(TAG, "Received power mode off");
-              this->mode = climate::CLIMATE_MODE_OFF;
-              break;
-            default:
-              ESP_LOGW(TAG, "Received unknown power mode");
-              break;
-          }
-          break;
-        case 0xB0:  // Mode
-          this->mode = determine_mode(this->rx_buffer_[currentIndex + 2]);
-          break;
-        case 0x31:  // Target temperature
-          ESP_LOGV(TAG, "Received target temperature");
-          update_target_temperature((int8_t) this->rx_buffer_[currentIndex + 2]);
-          break;
-        case 0xA0:  // Fan speed
-          ESP_LOGV(TAG, "Received fan speed");
-          this->set_custom_fan_mode_(determine_fan_speed(this->rx_buffer_[currentIndex + 2]));
-          break;
-        case 0xB2:  // Preset
-          ESP_LOGV(TAG, "Received preset");
-          this->set_custom_preset_(determine_preset(this->rx_buffer_[currentIndex + 2]));
-          break;
-        case 0xA1:
-          ESP_LOGV(TAG, "Received swing mode");
-          this->swing_mode = determine_swing(this->rx_buffer_[currentIndex + 2]);
-          break;
-        case 0xA5:  // Horizontal swing position
-          ESP_LOGV(TAG, "Received horizontal swing position");
-
-          update_swing_horizontal(StringRef(determine_swing_horizontal(this->rx_buffer_[currentIndex + 2])));
-          break;
-        case 0xA4:  // Vertical swing position
-          ESP_LOGV(TAG, "Received vertical swing position");
-
-          update_swing_vertical(StringRef(determine_swing_vertical(this->rx_buffer_[currentIndex + 2])));
-          break;
-        case 0x33:  // nanoex mode
-          ESP_LOGV(TAG, "Received nanoex state");
-
-          update_nanoex(determine_nanoex(this->rx_buffer_[currentIndex + 2]));
-          break;
-        case 0x20:
-          ESP_LOGV(TAG, "Received unknown nanoex field");
-          // Not sure what this one, ignore it for now
-          break;
-        default:
-          ESP_LOGW(TAG, "Report has unknown field");
-          break;
-      }
-    }
-
-    climate::ClimateAction action = determine_action();  // Determine the current action of the AC
-    this->action = action;
-
-    this->publish_state();
+    this->decode_properties();
   } else if (this->rx_buffer_[2] == 0x01 && this->rx_buffer_[3] == 0x80)  // Answer for handshake 16
   {
     ESP_LOGI(TAG, "Panasonic AC component v%s initialized", VERSION);
@@ -629,77 +524,48 @@ void PanasonicACWLAN::handle_handshake_packet() {
  */
 
 void PanasonicACWLAN::send_set_command() {
-  // Size of packet is 3 * 4 (for the header, packet size, and key value pair counter)
-  // setQueueIndex * 4 for the individual key value pairs
-  int packetLength = (3 * 4) + (this->set_queue_index_ * 4);
-  std::vector<uint8_t> packet(packetLength);
+  if (this->set_queue_index_ == 0) return;  // nothing queued
+  this->send_packet(CommandType::Normal);
+}
 
-  // Mark this packet as a set command
-  packet[2] = 0x10;
-  packet[3] = 0x08;
-
-  packet[4] = 0x00;                                  // Packet size header
-  packet[5] = (4 * this->set_queue_index_) - 1 + 6;  // Packet size, key value pairs * 4, subtract checksum (-1), add 4
-                                                     // for key value pair counter and 2 for rest of packet size
-  packet[6] = 0x01;
-  packet[7] = 0x01;
-
-  packet[8] = 0x30;  // Key value pair counter header
-  packet[9] = 0x01;
-  packet[10] = this->set_queue_index_;  // Key value pair counter
-  packet[11] = 0x00;
-
-  for (int i = 0; i < this->set_queue_index_; i++) {
-    packet[12 + (i * 4) + 0] = this->set_queue_[i][0];  // Key
-    packet[12 + (i * 4) + 1] = 0x01;                    // Unknown, always 0x01
-    packet[12 + (i * 4) + 2] = this->set_queue_[i][1];  // Value
-    packet[12 + (i * 4) + 3] =
-        0x00;  // Unknown, either 0x00 or 0x01 or 0x02; overwritten by checksum on last key value pair
+void PanasonicACWLAN::send_poll() {
+  this->start_property_packet(0x10, 0x09);
+  if (this->poll_properties_mode_ == PollPropertiesMode::EXTEND) {
+    for (const auto &p : POLL_PROPERTIES) {
+      this->request_value(p.property, p.attrb);
+    }
   }
-
-  send_packet(packet, CommandType::Normal);
-  this->set_queue_index_ = 0;
+  for (const auto &p : this->extra_poll_properties_) {
+    this->request_value(p.property, p.attrb);
+  }
+  this->send_set_command();
 }
 
 void PanasonicACWLAN::send_command(const uint8_t *command, size_t commandLength, CommandType type) {
-  std::vector<uint8_t> packet(commandLength + 3);  // Reserve space for upcoming packet
-
-  for (int i = 0; i < commandLength; i++)  // Loop through command
-  {
-    packet[i + 2] = command[i];  // Add to packet
+  if ((commandLength + 3) > sizeof(this->tx_buffer_)) {
+    ESP_LOGE(TAG, "Failed to create packet from command: command size (%d) exceeds packet capacity (%d).", commandLength, sizeof(this->tx_buffer_));
+    return;
   }
-
-  this->last_command_ = command;               // Store the last command we sent
-  this->last_command_length_ = commandLength;  // Store the length of the last command we sent
-
-  send_packet(packet, type);  // Actually send the constructed packet
+  memcpy(&this->tx_buffer_[2], command, commandLength);
+  this->set_queue_index_ = commandLength + 2;
+  this->send_packet(type);
 }
 
-void PanasonicACWLAN::send_packet(std::vector<uint8_t> packet, CommandType type) {
-  uint8_t length = packet.size();
+void PanasonicACWLAN::send_packet(CommandType type) {
+  uint8_t length = this->set_queue_index_ + 1;
 
-  uint8_t checksum = 0;  // Checksum is calculated by adding all bytes together
-  packet[0] = HEADER;    // Write header to packet
+  this->tx_buffer_[0] = HEADER;    // Write header to packet
 
   uint8_t packetCount = this->transmit_packet_count_;  // Set packet counter
-
   if (type == CommandType::Response)
     packetCount = this->receive_packet_count_;  // Set the packet counter to the rx counter
-  else if (type == CommandType::Resend)
-    packetCount = this->transmit_packet_count_ -
-                  1;  // Set the packet counter to the tx counter -1 (we are sending the same packet again)
+  this->tx_buffer_[1] = packetCount;  // Write to packet
 
-  packet[1] = packetCount;  // Write to packet
-
-  for (uint8_t i : packet)  // Loop through payload to calculate checksum
-  {
-    checksum += i;  // Add byte to checksum
+  uint8_t checksum = 0;  // Checksum is calculated by adding all bytes together
+  for (size_t i = 0; i < length - 1; i++) { // Loop through payload to calculate checksum
+    checksum += this->tx_buffer_[i];  // Add byte to checksum
   }
-
-  checksum = (~checksum + 1);     // Compute checksum
-  packet[length - 1] = checksum;  // Add checksum to end of packet
-
-  this->last_packet_sent_ = millis();  // Save the time when we sent the last packet
+  this->tx_buffer_[length - 1] = (~checksum + 1);     // Compute checksum
 
   if (type == CommandType::Normal)  // Do not increase tx counter if this was a response or if this was a resent packet
   {
@@ -717,8 +583,10 @@ void PanasonicACWLAN::send_packet(std::vector<uint8_t> packet, CommandType type)
   if (type != CommandType::Response)     // Don't wait for a response for responses
     this->waiting_for_response_ = true;  // Mark that we are waiting for a response
 
-  write_array(packet);       // Write to UART
-  log_packet(packet, true);  // Write to log
+  this->last_sent_length_ = length;  // remember what actually went out, for resend
+  write_array(this->tx_buffer_, length);       // Write to UART
+  this->last_packet_sent_ = millis();  // Save the time when we sent the last packet
+  this->set_queue_index_ = 0;
 }
 
 /*
@@ -729,20 +597,62 @@ void PanasonicACWLAN::handle_resend() {
       this->rx_buffer_.empty())  // Check if AC failed to respond in time and resend packet, if nothing was received yet
   {
     ESP_LOGD(TAG, "Resending previous packet");
-    send_command(this->last_command_, this->last_command_length_, CommandType::Resend);
+    this->write_array(this->tx_buffer_, this->last_sent_length_);
+    this->last_packet_sent_ = millis();
   }
 }
 
-void PanasonicACWLAN::set_value(uint8_t key, uint8_t value) {
-  if (this->set_queue_index_ >= 15) {
-    ESP_LOGE(TAG, "Set queue overflow");
-    this->set_queue_index_ = 0;
+void PanasonicACWLAN::start_property_packet(uint8_t msg_type_hi, uint8_t msg_type_lo) {
+  // Packet structure
+  // HEADER(1) SEQUENCE(1) MESSAGE_TYPE(2) PAYLOAD_LENGTH(2) PAYLOAD(PAYLOAD_LENGTH) CHECKSUM(1)
+  // Payload structure
+  // PAYLOAD_ATTRIBUTE(1) OBJECT_ID(3) PROPERTY_COUNT(1) PROPERTY_LIST
+  // Property structure
+  // PROPERTY_ATTRIBUTE(1) PROPERTY_ID(1) VALUE_LENGTH(1) VALUE(VALUE_LENGTH)
+  // Message type
+  this->tx_buffer_[2] = msg_type_hi;
+  this->tx_buffer_[3] = msg_type_lo;
+  // payload length
+  this->tx_buffer_[4] = 0;
+  this->tx_buffer_[5] = 0;
+  // payload attribute
+  this->tx_buffer_[6] = 0x01;
+  // property list id
+  this->tx_buffer_[7] = 0x01;
+  this->tx_buffer_[8] = 0x30;
+  this->tx_buffer_[9] = 0x01;
+  // property count
+  this->tx_buffer_[10] = 0;
+  this->set_queue_index_ = 11;
+}
+
+void PanasonicACWLAN::set_value(uint8_t property, uint8_t value, uint8_t attrb) {
+  this->set_value(property, &value, 1, attrb);
+}
+
+void PanasonicACWLAN::set_value(uint8_t property, const uint8_t *value, size_t length, uint8_t attrb) {
+  if (this->set_queue_index_ == 0) {  // Starting a fresh property-based packet
+    this->start_property_packet(0x10, 0x08);
+  }
+  if ((this->set_queue_index_ + 3 + length) >= sizeof(this->tx_buffer_)) {
+    ESP_LOGE(TAG, "Adding property 0x%02X failed. No space left in tx buffer.", property);
     return;
   }
+  this->tx_buffer_[this->set_queue_index_++] = attrb;  // property attribute
+  this->tx_buffer_[this->set_queue_index_++] = property;  // property id
+  this->tx_buffer_[this->set_queue_index_++] = length;  // length
+  if (length > 0) {
+    memcpy(&(this->tx_buffer_[this->set_queue_index_]), value, length); //value
+  }
+  this->set_queue_index_ += length;
+  uint16_t payload_length = this->set_queue_index_ - 6;
+  this->tx_buffer_[4] = static_cast<uint8_t>(payload_length >> 8);
+  this->tx_buffer_[5] = static_cast<uint8_t>(payload_length & 0xFF);
+  this->tx_buffer_[10]++;  // property count
+}
 
-  this->set_queue_[this->set_queue_index_][0] = key;
-  this->set_queue_[this->set_queue_index_][1] = value;
-  this->set_queue_index_++;
+void PanasonicACWLAN::request_value(uint8_t property, uint8_t attrb) {
+  this->set_value(property, nullptr, 0, attrb);
 }
 
 /*
@@ -859,6 +769,128 @@ void PanasonicACWLAN::on_mild_dry_change(bool state) {
   // }
 
   // send_set_command();
+}
+
+void PanasonicACWLAN::decode_properties() {
+    size_t offset = 6 + 5;
+    size_t size = rx_buffer_.size();
+    size_t end = size > 0 ? size - 1 : 0;
+    while ((offset + 3) <= end) {
+      offset = parse_property(offset, end);
+    }
+    if (!this->power_state) this->mode = climate::CLIMATE_MODE_OFF;
+    climate::ClimateAction action = determine_action();  // Determine the current action of the AC
+    this->action = action;
+    this->publish_state();
+}
+
+size_t PanasonicACWLAN::parse_property(size_t offset, size_t end) {
+  uint8_t attrb = this->rx_buffer_[offset];
+  uint8_t property = this->rx_buffer_[offset + 1];
+  uint8_t length = this->rx_buffer_[offset + 2];
+  if ((offset + 3 + length) > end) {
+    ESP_LOGW(TAG, "Property 0x%02X length %u exceeds packet (offset=%u, end=%u)", property, length, offset, end);
+    return end;
+  }
+  const uint8_t *value = (length > 0) ? &this->rx_buffer_[offset + 3] : nullptr;
+
+  switch(property) {
+    case 0x80:  // Power mode
+      if (length == 1) {
+        switch (value[0]) {
+          case 0x30:  // Power mode on
+            ESP_LOGV(TAG, "Received power mode on");
+            this->power_state = true;
+            break;
+          case 0x31:  // Power mode off
+            ESP_LOGV(TAG, "Received power mode off");
+            this->power_state = false;
+            break;
+          default:
+            ESP_LOGW(TAG, "Received unknown power mode (0x%02X)", value[0]);
+            break;
+        }
+      }
+      break;
+    case 0xB0:  // Mode
+      if (length == 1) {
+        this->mode = determine_mode(value[0]);
+      }
+      break;
+    case 0x31:  // Target temperature (old)
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received target temperature");
+        update_target_temperature(value[0]);
+      }
+      break;
+    case 0xB3:  // Target temperature (echonet)
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received target temperature (echonet)");
+        update_target_temperature(value[0] * 2);
+      }
+      break;
+    case 0xF5:  // Target temperature (new)
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received target temperature (F5)");
+        uint8_t temp_raw = ((value[0] & 0x7f) << 1) | (value[0] >> 7);
+        update_target_temperature(temp_raw);
+      }
+      break;
+    case 0xBB:  // Current temperature
+      if (length == 1) {
+        update_current_temperature((int8_t)value[0]);
+      }
+      break;
+    case 0xBE:  // Outside temperature
+      if (length == 1) {
+        update_outside_temperature((int8_t)value[0]);
+      }
+      break;
+    case 0xA0:  // Fan speed
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received fan speed");
+        this->set_custom_fan_mode_(determine_fan_speed(value[0]));
+      }
+      break;
+    case 0xB2: // Preset
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received preset");
+        this->set_custom_preset_(determine_preset(value[0]));
+      }
+      break;
+    case 0xA1:  // swing mode
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received swing mode");
+        this->swing_mode = determine_swing(value[0]);
+      }
+      break;
+    case 0xA5:  // Horizontal swing position
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received horizontal swing position");
+        update_swing_horizontal(StringRef(determine_swing_horizontal(value[0])));
+      }
+      break;
+    case 0xA4:  // Vertical swing position
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received vertical swing position");
+        update_swing_vertical(StringRef(determine_swing_vertical(value[0])));
+      }
+      break;
+    case 0x33:  // nanoex mode
+      if (length == 1) {
+        ESP_LOGV(TAG, "Received nanoex state");
+        update_nanoex(determine_nanoex(value[0]));
+      }
+      break;
+    default:
+      constexpr size_t MAX_LOG_BYTES = 16;
+      char hex[format_hex_pretty_size(MAX_LOG_BYTES)];
+      format_hex_pretty_to(hex, sizeof(hex), value, std::min<size_t>(length, MAX_LOG_BYTES));
+      ESP_LOGD(TAG,
+        "Unknown property: attrb=0x%02X id=0x%02X len=%u value=%s",
+        attrb, property, length, hex);
+  }
+  return offset + 3 + length;
 }
 
 }  // namespace WLAN

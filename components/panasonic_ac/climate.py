@@ -20,6 +20,8 @@ panasonic_ac_cnt_ns = panasonic_ac_ns.namespace("CNT")
 PanasonicACCNT = panasonic_ac_cnt_ns.class_("PanasonicACCNT", PanasonicAC)
 panasonic_ac_wlan_ns = panasonic_ac_ns.namespace("WLAN")
 PanasonicACWLAN = panasonic_ac_wlan_ns.class_("PanasonicACWLAN", PanasonicAC)
+PollProperty = panasonic_ac_wlan_ns.struct("PollProperty")
+PollPropertiesMode = panasonic_ac_wlan_ns.enum("PollPropertiesMode", is_class=True)
 
 PanasonicACSwitch = panasonic_ac_ns.class_(
     "PanasonicACSwitch", switch.Switch, cg.Component
@@ -43,6 +45,10 @@ CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 CONF_DEFROST_SENSOR = "defrost_sensor"
 CONF_WLAN = "wlan"
 CONF_CNT = "cnt"
+CONF_POLL_PROPERTIES = "poll_properties"
+CONF_POLL_PROPERTIES_MODE = "poll_properties_mode"
+CONF_PROPERTY_ID = "id"
+CONF_ATTRIBUTE = "attrb"
 
 HORIZONTAL_SWING_OPTIONS = ["auto", "left", "left_center", "center", "right_center", "right"]
 
@@ -67,6 +73,31 @@ PANASONIC_COMMON_SCHEMA = {
     cv.Optional(CONF_CURRENT_TEMPERATURE_OFFSET): cv.int_range(min=-15, max=15),
 }
 
+POLL_PROPERTIES_MODE_OPTIONS = {
+    "extend": PollPropertiesMode.EXTEND,
+    "replace": PollPropertiesMode.REPLACE,
+}
+
+POLL_PROPERTY_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_PROPERTY_ID): cv.hex_uint8_t,
+        cv.Optional(CONF_ATTRIBUTE, default=0x00): cv.hex_uint8_t,
+    }
+)
+
+def validate_poll_property(value):
+    # Allow a plain id (e.g. 0x11) as shorthand for {id: 0x11, attrb: 0x00}
+    if not isinstance(value, dict):
+        value = {CONF_PROPERTY_ID: value}
+    return POLL_PROPERTY_SCHEMA(value)
+
+PANASONIC_WLAN_SCHEMA = {
+    cv.Optional(CONF_POLL_PROPERTIES, default=[]): cv.ensure_list(validate_poll_property),
+    cv.Optional(CONF_POLL_PROPERTIES_MODE, default="extend"): cv.enum(
+        POLL_PROPERTIES_MODE_OPTIONS, lower=True
+    ),
+}
+
 PANASONIC_CNT_SCHEMA = {
     cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
     cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
@@ -82,7 +113,7 @@ PANASONIC_CNT_SCHEMA = {
 
 CONFIG_SCHEMA = cv.typed_schema(
     {
-        CONF_WLAN: climate.climate_schema(PanasonicACWLAN).extend(PANASONIC_COMMON_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
+        CONF_WLAN: climate.climate_schema(PanasonicACWLAN).extend(PANASONIC_COMMON_SCHEMA).extend(PANASONIC_WLAN_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
         CONF_CNT: climate.climate_schema(PanasonicACCNT).extend(PANASONIC_COMMON_SCHEMA).extend(PANASONIC_CNT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
     }
 )
@@ -133,3 +164,23 @@ async def to_code(config):
     if CONF_CURRENT_POWER_CONSUMPTION in config:
         sens = await sensor.new_sensor(config[CONF_CURRENT_POWER_CONSUMPTION])
         cg.add(var.set_current_power_consumption_sensor(sens))
+
+    if CONF_POLL_PROPERTIES in config:
+        properties = config[CONF_POLL_PROPERTIES]
+        cg.add_define("PANASONIC_AC_NUM_EXTRA_POLL_PROPERTIES", len(properties))
+        if properties:
+            cg.add(
+                var.set_extra_poll_properties(
+                    [
+                        cg.StructInitializer(
+                            PollProperty,
+                            ("attrb", p[CONF_ATTRIBUTE]),
+                            ("property", p[CONF_PROPERTY_ID]),
+                        )
+                        for p in properties
+                    ]
+                )
+            )
+
+    if CONF_POLL_PROPERTIES_MODE in config:
+        cg.add(var.set_poll_properties_mode(config[CONF_POLL_PROPERTIES_MODE]))
