@@ -457,6 +457,17 @@ void PanasonicACWLAN::handle_packet() {
 
     this->swing_mode = determine_swing(this->rx_buffer_[30]);
 
+    // Error/status code: 4 ASCII chars starting at byte 84 in the query response
+    // (e.g. "H000" = no fault, "H099" = evaporator frost). Reported on every poll,
+    // so this is a fully passive fault beacon - no command needed.
+    std::string error_code;
+    for (int i = 84; i <= 87; i++) {
+      uint8_t b = this->rx_buffer_[i];
+      if (b >= 0x20 && b < 0x7F)
+        error_code += (char) b;
+    }
+    update_error_code(error_code);
+
     // climate::ClimateAction action = determine_action(); // Determine the current action of the AC
     // this->action = action;
 

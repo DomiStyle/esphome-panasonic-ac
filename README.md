@@ -70,6 +70,19 @@ In order to find out which features are supported by your AC, check the remote t
 **Enabling unsupported features can lead to undefined behavior and may damage your AC. Make sure to check your remote or manual first.**
 **current_power_consumption is just as ESTIMATED value by the AC**
 
+### Error code sensor (WLAN / DNSK-P11 only)
+
+The WLAN protocol can report the unit's error/status code (e.g. `H099`). It is opt-in and only accepted for `type: wlan`:
+
+```
+  error_code:
+    name: Panasonic AC Error Code
+    error_description:
+      name: Panasonic AC Error Description
+```
+
+`error_description` is optional and translates known codes into readable text. Both are diagnostic entities.
+
 ## Setting temperature offsets
 
 As the internal sensors reading might not reflect the actual temperature in the room or outside, you can optionally define a fixed offset for both sensors.

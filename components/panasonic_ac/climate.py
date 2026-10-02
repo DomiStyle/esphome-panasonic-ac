@@ -1,15 +1,16 @@
 from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_POWER,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
     UNIT_WATT,
 )
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, climate, sensor, select, switch, binary_sensor
+from esphome.components import uart, climate, sensor, select, switch, binary_sensor, text_sensor
 
-AUTO_LOAD = ["switch", "sensor", "select", "binary_sensor"]
+AUTO_LOAD = ["switch", "sensor", "select", "binary_sensor", "text_sensor"]
 DEPENDENCIES = ["uart"]
 
 panasonic_ac_ns = cg.esphome_ns.namespace("panasonic_ac")
@@ -41,6 +42,8 @@ CONF_ECONAVI_SWITCH = "econavi_switch"
 CONF_MILD_DRY_SWITCH = "mild_dry_switch"
 CONF_CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 CONF_DEFROST_SENSOR = "defrost_sensor"
+CONF_ERROR_CODE = "error_code"
+CONF_ERROR_DESCRIPTION = "error_description"
 CONF_WLAN = "wlan"
 CONF_CNT = "cnt"
 
@@ -67,6 +70,20 @@ PANASONIC_COMMON_SCHEMA = {
     cv.Optional(CONF_CURRENT_TEMPERATURE_OFFSET): cv.int_range(min=-15, max=15),
 }
 
+PANASONIC_WLAN_SCHEMA = {
+    # The error code is only readable on the WLAN protocol (DNSK-P11), so the
+    # option is rejected for CNT instead of silently never updating.
+    cv.Optional(CONF_ERROR_CODE): text_sensor.text_sensor_schema(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend(
+        {
+            cv.Optional(CONF_ERROR_DESCRIPTION): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+        }
+    ),
+}
+
 PANASONIC_CNT_SCHEMA = {
     cv.Optional(CONF_ECO_SWITCH): SWITCH_SCHEMA,
     cv.Optional(CONF_ECONAVI_SWITCH): SWITCH_SCHEMA,
@@ -82,7 +99,7 @@ PANASONIC_CNT_SCHEMA = {
 
 CONFIG_SCHEMA = cv.typed_schema(
     {
-        CONF_WLAN: climate.climate_schema(PanasonicACWLAN).extend(PANASONIC_COMMON_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
+        CONF_WLAN: climate.climate_schema(PanasonicACWLAN).extend(PANASONIC_COMMON_SCHEMA).extend(PANASONIC_WLAN_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
         CONF_CNT: climate.climate_schema(PanasonicACCNT).extend(PANASONIC_COMMON_SCHEMA).extend(PANASONIC_CNT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA),
     }
 )
@@ -112,6 +129,17 @@ async def to_code(config):
     if CONF_DEFROST_SENSOR in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST_SENSOR])
         cg.add(var.set_defrost_sensor(sens))
+
+    if CONF_ERROR_CODE in config:
+        conf = config[CONF_ERROR_CODE]
+        cg.add(var.set_error_code_enabled(True))
+        sens = await text_sensor.new_text_sensor(conf)
+        cg.add(var.set_error_code_text_sensor(sens))
+
+        if CONF_ERROR_DESCRIPTION in conf:
+            cg.add_define("USE_PANASONIC_ERROR_DESCRIPTION")
+            desc_sens = await text_sensor.new_text_sensor(conf[CONF_ERROR_DESCRIPTION])
+            cg.add(var.set_error_description_text_sensor(desc_sens))
 
     if CONF_OUTSIDE_TEMPERATURE_OFFSET in config:
         cg.add(var.set_outside_temperature_offset(config[CONF_OUTSIDE_TEMPERATURE_OFFSET]))
