@@ -350,7 +350,7 @@ void PanasonicACCNT::set_data(bool set) {
 
     if (this->current_power_consumption_sensor_ != nullptr) {
       uint16_t power_consumption = determine_power_consumption(
-          (int8_t) this->rx_buffer_[28], (int8_t) this->rx_buffer_[29], (int8_t) this->rx_buffer_[30]);
+          this->rx_buffer_[28], this->rx_buffer_[29], 0);
       this->update_current_power_consumption(power_consumption);
     }
 
