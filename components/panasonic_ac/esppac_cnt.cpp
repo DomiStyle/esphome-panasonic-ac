@@ -185,6 +185,15 @@ void PanasonicACCNT::loop() {
   {
     log_packet(this->rx_buffer_);
 
+    // The CN-CNT line occasionally returns our own request verbatim while the AC is busy.
+    // Such an echo has a valid header/length/checksum but all-zero fields, and would be
+    // decoded as "off, 0 degrees". Ignore it and keep waiting for the real reply.
+    if (this->rx_buffer_ == this->last_tx_packet_) {
+      ESP_LOGD(TAG, "Ignoring echo of our own packet");
+      this->rx_buffer_.clear();
+      return;
+    }
+
     if (!verify_packet())  // Verify length, header, counter and checksum
       return;
 
@@ -412,6 +421,7 @@ void PanasonicACCNT::send_packet(const std::vector<uint8_t> &packet, CommandType
   if (type != CommandType::Response)     // Don't wait for a response for responses
     this->waiting_for_response_ = true;  // Mark that we are waiting for a response
 
+  this->last_tx_packet_ = packet;  // Remember it so an echoed copy can be recognised and ignored
   write_array(packet);       // Write to UART
   log_packet(packet, true);  // Write to log
 }

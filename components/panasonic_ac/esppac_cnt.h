@@ -37,6 +37,7 @@ class PanasonicACCNT : public PanasonicAC {
   // uint8_t data[10];
   std::vector<uint8_t> data = std::vector<uint8_t>(10);  // Stores the data received from the AC
   std::vector<uint8_t> cmd;                              // Used to build next command
+  std::vector<uint8_t> last_tx_packet_;  // Last packet we transmitted, used to drop line echoes
 
   void handle_poll();
   void handle_cmd();
