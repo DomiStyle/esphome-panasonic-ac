@@ -12,7 +12,7 @@ This hardware installation guide assumes you already have a Panasonic CZ-TACG1 i
 | GPIO16    | LV1    | - | Connect GPIO16 to the first of your logic converter channels (Low voltage) |
 | GPIO17    | LV2    | - | Connect GPIO17 to the second of your logic converter channels (Low voltage |
 | -    | HV1    | RX | Connect the first of your logic converter channels to the AC RX pin (High voltage) |
-| -    | HV2    | TX | Connect the second of your logic converter channels to the AX TX pin (High voltage) |
+| -    | HV2    | TX | Connect the second of your logic converter channels to the AC TX pin (High voltage) |
 
 * Disconnect the AC mains supply
 * Open up the front of your AC
