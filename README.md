@@ -47,10 +47,6 @@ This software installation guide assumes some familiarity with ESPHome.
 * If you see the handshake messages being sent (DNSK-P11) or polling requests being sent (CZ-TACG1) in the log you are good to go
 * Disconnect the ESP and continue with hardware installation
 
-## Troubleshooting UART wiring
-
-A checksum-valid packet in the log does not by itself prove that the AC is connected. A floating ESP UART RX pin can pick up and echo the ESP's own TX signal, producing plausible-looking packets even when the AC is disconnected. If readings look invalid or communication is not working, check the actual GPIO numbers printed on the ESP module and compare them with the UART pin configuration. Labels such as `D3` or `D4` on an interface board may refer to different GPIOs than the labels on the ESP module plugged into it.
-
 ## Setting supported features
 
 Since Panasonic ACs support different features you can comment out the lines at the bottom of your `ac.yaml`:
