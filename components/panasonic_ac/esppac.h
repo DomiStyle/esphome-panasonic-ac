@@ -8,6 +8,7 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 
+
 namespace esphome {
 
 namespace panasonic_ac {
