@@ -7,6 +7,8 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
+#include "esphome/core/alloc_helpers.h"
+
 
 namespace esphome {
 

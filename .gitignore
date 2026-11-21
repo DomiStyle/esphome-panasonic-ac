@@ -9,3 +9,5 @@ venv/
 builds/
 *.py[cod]
 .DS_Store
+/.vs/esphome-panasonic-ac/CopilotIndices/18.10.1207.43936
+/.vs
